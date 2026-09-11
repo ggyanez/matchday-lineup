@@ -12,8 +12,8 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [primaryPosition, setPrimaryPosition] = useState<Position>(
-    initial?.primaryPosition ?? "MC"
+  const [primaryPosition, setPrimaryPosition] = useState<Position | null>(
+    initial?.primaryPosition ?? null
   );
   const [secondaryPositions, setSecondaryPositions] = useState<Position[]>(
     initial?.secondaryPositions ?? []
@@ -81,10 +81,13 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
         <label className="flex flex-col gap-1 text-sm">
           Primary position
           <select
-            value={primaryPosition}
-            onChange={(e) => setPrimaryPosition(e.target.value as Position)}
+            value={primaryPosition ?? ""}
+            onChange={(e) =>
+              setPrimaryPosition(e.target.value === "" ? null : (e.target.value as Position))
+            }
             className="rounded border border-black/20 bg-transparent px-3 py-2 dark:border-white/20"
           >
+            <option value="">Not set yet</option>
             {POSITIONS.map((p) => (
               <option key={p} value={p}>
                 {p} — {POSITION_LABELS[p]}

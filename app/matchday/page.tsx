@@ -82,7 +82,7 @@ export default function MatchDayPage() {
                 />
                 <span>{player.name}</span>
                 <span className="text-black/50 dark:text-white/50">
-                  ({player.primaryPosition})
+                  ({player.primaryPosition ?? "no position"})
                 </span>
               </label>
             ))}

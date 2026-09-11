@@ -90,7 +90,11 @@ export default function PlayersPage() {
                 <div>
                   <p className="font-medium">{player.name}</p>
                   <p className="text-sm text-black/60 dark:text-white/60">
-                    {player.primaryPosition}
+                    {player.primaryPosition ?? (
+                      <span className="italic text-amber-600 dark:text-amber-400">
+                        No position set
+                      </span>
+                    )}
                     {player.secondaryPositions.length > 0 &&
                       ` · also: ${player.secondaryPositions.join(", ")}`}
                   </p>

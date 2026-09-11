@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const player = await updatePlayer(id, {
       name: body.name,
-      primaryPosition: body.primaryPosition,
+      primaryPosition: body.primaryPosition || null,
       secondaryPositions: body.secondaryPositions ?? [],
       notes: body.notes,
     });

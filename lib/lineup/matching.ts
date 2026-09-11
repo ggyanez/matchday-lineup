@@ -48,7 +48,7 @@ export function evaluateFit(
     return { score, fit: "secondary" };
   }
 
-  if (POSITION_GROUP[player.primaryPosition] === POSITION_GROUP[position]) {
+  if (player.primaryPosition && POSITION_GROUP[player.primaryPosition] === POSITION_GROUP[position]) {
     return { score: FIT_SCORE.SAME_LINE, fit: "makeshift" };
   }
 
