@@ -1,5 +1,7 @@
 # Matchday Lineup
 
+**Live:** [matchday-lineup.vercel.app](https://matchday-lineup.vercel.app)
+
 A small web app for amateur 11-a-side football teams that don't have a
 settled starting eleven. Keep a roster of players with their primary and
 secondary positions, mark who's confirmed for the next match, and get a
