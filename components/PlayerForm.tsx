@@ -30,6 +30,16 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
     );
   }
 
+  function moveSecondary(index: number, direction: -1 | 1) {
+    setSecondaryPositions((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
@@ -86,6 +96,10 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
 
       <fieldset className="mt-4">
         <legend className="text-sm">Secondary positions (can also cover)</legend>
+        <p className="mt-1 text-xs text-black/50 dark:text-white/50">
+          Tap to add. Order matters — the matching algorithm treats the first one as
+          a better fit than the last, so list them from strongest to weakest.
+        </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {POSITIONS.filter((p) => p !== primaryPosition).map((p) => {
             const active = secondaryPositions.includes(p);
@@ -105,6 +119,48 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
             );
           })}
         </div>
+
+        {secondaryPositions.length > 0 && (
+          <ol className="mt-3 flex flex-col gap-1">
+            {secondaryPositions.map((p, i) => (
+              <li
+                key={p}
+                className="flex items-center gap-2 rounded border border-black/10 px-2 py-1 text-sm dark:border-white/10"
+              >
+                <span className="w-4 text-black/40 dark:text-white/40">{i + 1}.</span>
+                <span className="flex-1">
+                  {p} — {POSITION_LABELS[p]}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => moveSecondary(i, -1)}
+                  disabled={i === 0}
+                  aria-label={`Move ${p} up`}
+                  className="disabled:opacity-30"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSecondary(i, 1)}
+                  disabled={i === secondaryPositions.length - 1}
+                  aria-label={`Move ${p} down`}
+                  className="disabled:opacity-30"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleSecondary(p)}
+                  aria-label={`Remove ${p}`}
+                  className="text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ol>
+        )}
       </fieldset>
 
       <label className="mt-4 flex flex-col gap-1 text-sm">

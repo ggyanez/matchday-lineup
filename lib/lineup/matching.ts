@@ -8,21 +8,56 @@ import { solveAssignment } from "./hungarian";
 /** How well a player fits a given position. Higher is better. */
 export const FIT_SCORE = {
   PRIMARY: 3,
-  SECONDARY: 2,
+  /** Score for a player's first-listed (best) secondary position. */
+  SECONDARY_BEST: 2,
+  /** Each secondary position past the first is worth a bit less than the previous one. */
+  SECONDARY_RANK_DECAY: 0.2,
+  /**
+   * Floor for any listed secondary position, however far down the list —
+   * always kept above SAME_LINE so an explicitly declared secondary
+   * position is worth more than a generic same-line fallback.
+   */
+  SECONDARY_MIN: 1.2,
   SAME_LINE: 1,
   NO_FIT: 0,
 } as const;
 
-export function compatibilityScore(player: Player, position: Position): number {
-  if (player.primaryPosition === position) return FIT_SCORE.PRIMARY;
-  if (player.secondaryPositions.includes(position)) return FIT_SCORE.SECONDARY;
-  if (POSITION_GROUP[player.primaryPosition] === POSITION_GROUP[position]) {
-    return FIT_SCORE.SAME_LINE;
+export type FitQuality = "primary" | "secondary" | "makeshift" | "unfilled";
+
+/**
+ * Scores how well a player fits a position, and classifies that fit.
+ *
+ * Secondary positions are ranked by the order the player listed them in —
+ * the first secondary position is treated as a better fit than the second,
+ * and so on, decaying toward (but never below) `SECONDARY_MIN`.
+ */
+export function evaluateFit(
+  player: Player,
+  position: Position
+): { score: number; fit: Exclude<FitQuality, "unfilled"> } {
+  if (player.primaryPosition === position) {
+    return { score: FIT_SCORE.PRIMARY, fit: "primary" };
   }
-  return FIT_SCORE.NO_FIT;
+
+  const rank = player.secondaryPositions.indexOf(position);
+  if (rank !== -1) {
+    const score = Math.max(
+      FIT_SCORE.SECONDARY_MIN,
+      FIT_SCORE.SECONDARY_BEST - rank * FIT_SCORE.SECONDARY_RANK_DECAY
+    );
+    return { score, fit: "secondary" };
+  }
+
+  if (POSITION_GROUP[player.primaryPosition] === POSITION_GROUP[position]) {
+    return { score: FIT_SCORE.SAME_LINE, fit: "makeshift" };
+  }
+
+  return { score: FIT_SCORE.NO_FIT, fit: "makeshift" };
 }
 
-export type FitQuality = "primary" | "secondary" | "makeshift" | "unfilled";
+export function compatibilityScore(player: Player, position: Position): number {
+  return evaluateFit(player, position).score;
+}
 
 export interface SlotAssignment {
   slotId: string;
@@ -44,13 +79,6 @@ export interface FormationRecommendation {
   averageScore: number;
   unfilledSlots: number;
   warnings: string[];
-}
-
-function fitQualityFor(score: number, filled: boolean): FitQuality {
-  if (!filled) return "unfilled";
-  if (score >= FIT_SCORE.PRIMARY) return "primary";
-  if (score >= FIT_SCORE.SECONDARY) return "secondary";
-  return "makeshift";
 }
 
 /**
@@ -96,14 +124,13 @@ export function assignFormation(
     const isRealPlayer = j >= 0 && j < players.length;
     const player = isRealPlayer ? players[j] : null;
     if (isRealPlayer) usedPlayerIndexes.add(j);
-    const score = player ? compatibilityScore(player, slot.position) : 0;
     return {
       slotId: slot.id,
       position: slot.position,
       x: slot.x,
       y: slot.y,
       player,
-      fit: fitQualityFor(score, Boolean(player)),
+      fit: player ? evaluateFit(player, slot.position).fit : "unfilled",
     };
   });
 
