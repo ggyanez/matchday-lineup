@@ -5,6 +5,7 @@ import PitchView from "@/components/PitchView";
 import type { Player } from "@/lib/domain/player";
 import { fetchPlayers, generateLineup, type LineupResponse } from "@/lib/api-client";
 import type { FormationRecommendation } from "@/lib/lineup/matching";
+import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
 
 export default function MatchDayPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -15,6 +16,7 @@ export default function MatchDayPage() {
   const [result, setResult] = useState<LineupResponse | null>(null);
   const [selected, setSelected] = useState<FormationRecommendation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
 
   useEffect(() => {
     fetchPlayers().then(({ players }) => {
@@ -22,6 +24,38 @@ export default function MatchDayPage() {
       setLoading(false);
     });
   }, []);
+
+  // Restore whatever was left in progress (confirmed players, last generated
+  // lineup) so switching to another page and back doesn't lose it. This page
+  // is statically prerendered, so the server-rendered shell is always the
+  // empty state — restoring has to happen post-mount, in an effect, to avoid
+  // a hydration mismatch against that shell.
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: syncing
+     one-time from localStorage after mount, not deriving from props/state */
+  useEffect(() => {
+    const draft = loadMatchDayDraft();
+    setConfirmed(new Set(draft.confirmedIds));
+    setExplainWithAI(draft.explainWithAI);
+    setResult(draft.result);
+    if (draft.result) {
+      const opts = [draft.result.best, ...draft.result.alternatives];
+      setSelected(opts.find((o) => o.formation === draft.selectedFormation) ?? draft.result.best);
+    }
+    setRestored(true);
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Persist on every change, once the initial restore above has run —
+  // otherwise this would fire first with empty state and wipe the draft.
+  useEffect(() => {
+    if (!restored) return;
+    saveMatchDayDraft({
+      confirmedIds: Array.from(confirmed),
+      explainWithAI,
+      result,
+      selectedFormation: selected?.formation ?? null,
+    });
+  }, [restored, confirmed, explainWithAI, result, selected]);
 
   const options = useMemo(
     () => (result ? [result.best, ...result.alternatives] : []),
@@ -51,6 +85,15 @@ export default function MatchDayPage() {
     } finally {
       setGenerating(false);
     }
+  }
+
+  function handleReset() {
+    setConfirmed(new Set());
+    setExplainWithAI(false);
+    setResult(null);
+    setSelected(null);
+    setError(null);
+    clearMatchDayDraft();
   }
 
   return (
@@ -106,6 +149,14 @@ export default function MatchDayPage() {
           />
           Explain with AI
         </label>
+        {(confirmed.size > 0 || result) && (
+          <button
+            onClick={handleReset}
+            className="text-sm text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
+          >
+            Reset
+          </button>
+        )}
       </section>
 
       {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
