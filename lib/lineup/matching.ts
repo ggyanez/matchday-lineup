@@ -121,14 +121,14 @@ export function assignFormation(
       `${unfilledSlots} slot(s) could not be filled — not enough confirmed players.`
     );
   }
-  const goalkeeperSlot = slotAssignments.find((s) => s.position === "GK");
+  const goalkeeperSlot = slotAssignments.find((s) => s.position === "ARQ");
   if (goalkeeperSlot && goalkeeperSlot.fit === "makeshift") {
     warnings.push(
       `No natural goalkeeper among confirmed players — ${goalkeeperSlot.player?.name} is filling in.`
     );
   }
   const makeshiftOutfield = slotAssignments.filter(
-    (s) => s.fit === "makeshift" && s.position !== "GK"
+    (s) => s.fit === "makeshift" && s.position !== "ARQ"
   );
   if (makeshiftOutfield.length > 0) {
     warnings.push(

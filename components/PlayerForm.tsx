@@ -13,7 +13,7 @@ interface PlayerFormProps {
 export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [primaryPosition, setPrimaryPosition] = useState<Position>(
-    initial?.primaryPosition ?? "CM"
+    initial?.primaryPosition ?? "MC"
   );
   const [secondaryPositions, setSecondaryPositions] = useState<Position[]>(
     initial?.secondaryPositions ?? []
