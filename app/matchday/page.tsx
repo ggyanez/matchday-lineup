@@ -1,11 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import PitchView from "@/components/PitchView";
+import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
 import type { Player } from "@/lib/domain/player";
+import { FORMATIONS, FORMATION_NAMES, type FormationName } from "@/lib/domain/formation";
 import { fetchPlayers, generateLineup, type LineupResponse } from "@/lib/api-client";
-import type { FormationRecommendation } from "@/lib/lineup/matching";
+import { buildRecommendationFromAssignment, type SlotAssignment } from "@/lib/lineup/matching";
 import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
+
+function assignmentsFromSlots(slots: SlotAssignment[]): SlotAssignments {
+  return Object.fromEntries(slots.map((s) => [s.slotId, s.player?.id ?? null]));
+}
+
+function sameAssignments(a: SlotAssignments, b: SlotAssignments): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const key of keys) {
+    if ((a[key] ?? null) !== (b[key] ?? null)) return false;
+  }
+  return true;
+}
 
 export default function MatchDayPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -14,7 +27,8 @@ export default function MatchDayPage() {
   const [explainWithAI, setExplainWithAI] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<LineupResponse | null>(null);
-  const [selected, setSelected] = useState<FormationRecommendation | null>(null);
+  const [activeFormationName, setActiveFormationName] = useState<FormationName | null>(null);
+  const [assignments, setAssignments] = useState<SlotAssignments>({});
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
 
@@ -25,11 +39,12 @@ export default function MatchDayPage() {
     });
   }, []);
 
-  // Restore whatever was left in progress (confirmed players, last generated
-  // lineup) so switching to another page and back doesn't lose it. This page
-  // is statically prerendered, so the server-rendered shell is always the
-  // empty state — restoring has to happen post-mount, in an effect, to avoid
-  // a hydration mismatch against that shell.
+  // Restore whatever was left in progress (confirmed players, the board
+  // layout, last generated lineup) so switching to another page and back
+  // doesn't lose it. This page is statically prerendered, so the
+  // server-rendered shell is always the empty state — restoring has to
+  // happen post-mount, in an effect, to avoid a hydration mismatch against
+  // that shell.
   /* eslint-disable react-hooks/set-state-in-effect -- intentional: syncing
      one-time from localStorage after mount, not deriving from props/state */
   useEffect(() => {
@@ -37,10 +52,8 @@ export default function MatchDayPage() {
     setConfirmed(new Set(draft.confirmedIds));
     setExplainWithAI(draft.explainWithAI);
     setResult(draft.result);
-    if (draft.result) {
-      const opts = [draft.result.best, ...draft.result.alternatives];
-      setSelected(opts.find((o) => o.formation === draft.selectedFormation) ?? draft.result.best);
-    }
+    setActiveFormationName(draft.activeFormation);
+    setAssignments(draft.assignments);
     setRestored(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -53,14 +66,37 @@ export default function MatchDayPage() {
       confirmedIds: Array.from(confirmed),
       explainWithAI,
       result,
-      selectedFormation: selected?.formation ?? null,
+      activeFormation: activeFormationName,
+      assignments,
     });
-  }, [restored, confirmed, explainWithAI, result, selected]);
+  }, [restored, confirmed, explainWithAI, result, activeFormationName, assignments]);
 
-  const options = useMemo(
+  const confirmedPlayers = useMemo(
+    () => players.filter((p) => confirmed.has(p.id)),
+    [players, confirmed]
+  );
+
+  const formationOptions = useMemo(
     () => (result ? [result.best, ...result.alternatives] : []),
     [result]
   );
+
+  const activeFormation = activeFormationName ? FORMATIONS[activeFormationName] : null;
+
+  // Recomputed live from the current (possibly hand-edited) assignments —
+  // not frozen from whatever the algorithm originally suggested.
+  const live = useMemo(
+    () =>
+      activeFormation
+        ? buildRecommendationFromAssignment(confirmedPlayers, activeFormation, assignments)
+        : null,
+    [activeFormation, confirmedPlayers, assignments]
+  );
+
+  const isShowingGeneratedBest =
+    result !== null &&
+    activeFormationName === result.best.formation &&
+    sameAssignments(assignments, assignmentsFromSlots(result.best.slots));
 
   function toggle(id: string) {
     setConfirmed((current) => {
@@ -71,6 +107,11 @@ export default function MatchDayPage() {
     });
   }
 
+  function openFormation(name: FormationName, initialAssignments: SlotAssignments = {}) {
+    setActiveFormationName(name);
+    setAssignments(initialAssignments);
+  }
+
   async function handleGenerate() {
     setError(null);
     setGenerating(true);
@@ -79,7 +120,7 @@ export default function MatchDayPage() {
         explain: explainWithAI,
       });
       setResult(response);
-      setSelected(response.best);
+      openFormation(response.best.formation, assignmentsFromSlots(response.best.slots));
     } catch {
       setError("Could not generate a lineup. Try confirming at least one player.");
     } finally {
@@ -91,7 +132,8 @@ export default function MatchDayPage() {
     setConfirmed(new Set());
     setExplainWithAI(false);
     setResult(null);
-    setSelected(null);
+    setActiveFormationName(null);
+    setAssignments({});
     setError(null);
     clearMatchDayDraft();
   }
@@ -100,7 +142,8 @@ export default function MatchDayPage() {
     <div className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">Match Day</h1>
       <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-        Confirm who&apos;s available for this match, then generate the best-fitting lineup.
+        Confirm who&apos;s available for this match, generate the best-fitting lineup, then drag
+        players between slots and the bench to fine-tune it.
       </p>
 
       <section className="mt-6">
@@ -133,7 +176,7 @@ export default function MatchDayPage() {
         )}
       </section>
 
-      <section className="mt-6 flex items-center gap-4">
+      <section className="mt-6 flex flex-wrap items-center gap-4">
         <button
           onClick={handleGenerate}
           disabled={confirmed.size === 0 || generating}
@@ -149,6 +192,27 @@ export default function MatchDayPage() {
           />
           Explain with AI
         </label>
+
+        <label className="flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
+          or build manually:
+          <select
+            value={activeFormationName ?? ""}
+            onChange={(e) => {
+              const name = e.target.value as FormationName | "";
+              if (name) openFormation(name);
+            }}
+            disabled={confirmed.size === 0}
+            className="rounded border border-black/20 bg-transparent px-2 py-1 dark:border-white/20"
+          >
+            <option value="">Choose a formation…</option>
+            {FORMATION_NAMES.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {(confirmed.size > 0 || result) && (
           <button
             onClick={handleReset}
@@ -161,55 +225,57 @@ export default function MatchDayPage() {
 
       {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-      {result && selected && (
+      {activeFormation && live && (
         <section className="mt-10 grid gap-8 sm:grid-cols-[1fr_1.2fr]">
           <div>
-            <div className="flex flex-wrap gap-2">
-              {options.map((option) => (
-                <button
-                  key={option.formation}
-                  onClick={() => setSelected(option)}
-                  className={`rounded-full border px-3 py-1 text-xs ${
-                    selected.formation === option.formation
-                      ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                      : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
-                  }`}
-                >
-                  {option.formation}
-                </button>
-              ))}
-            </div>
-            <PitchView slots={selected.slots} />
+            {formationOptions.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {formationOptions.map((option) => (
+                  <button
+                    key={option.formation}
+                    onClick={() => openFormation(option.formation, assignmentsFromSlots(option.slots))}
+                    className={`rounded-full border px-3 py-1 text-xs ${
+                      activeFormationName === option.formation
+                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                        : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                    }`}
+                  >
+                    {option.formation}
+                  </button>
+                ))}
+              </div>
+            )}
+            <PitchBoard
+              formation={activeFormation}
+              players={confirmedPlayers}
+              assignments={assignments}
+              onAssignmentsChange={setAssignments}
+            />
           </div>
 
           <div>
-            <h2 className="text-lg font-medium">{selected.formation}</h2>
-            <p className="text-sm text-black/60 dark:text-white/60">{selected.description}</p>
+            <h2 className="text-lg font-medium">{activeFormation.name}</h2>
+            <p className="text-sm text-black/60 dark:text-white/60">{activeFormation.description}</p>
 
-            {selected.warnings.length > 0 && (
+            {live.warnings.length > 0 && (
               <ul className="mt-3 space-y-1 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
-                {selected.warnings.map((w, i) => (
+                {live.warnings.map((w, i) => (
                   <li key={i}>{w}</li>
                 ))}
               </ul>
             )}
 
-            {result.explanation && selected.formation === result.best.formation && (
-              <p className="mt-4 rounded border border-black/10 bg-black/5 p-3 text-sm dark:border-white/10 dark:bg-white/5">
-                {result.explanation}
-              </p>
+            {result?.explanation && activeFormationName === result.best.formation && (
+              <div className="mt-4 rounded border border-black/10 bg-black/5 p-3 text-sm dark:border-white/10 dark:bg-white/5">
+                <p>{result.explanation}</p>
+                {!isShowingGeneratedBest && (
+                  <p className="mt-2 text-xs italic text-black/50 dark:text-white/50">
+                    You&apos;ve edited this lineup since it was generated — the explanation above
+                    refers to the original suggestion.
+                  </p>
+                )}
+              </div>
             )}
-
-            <div className="mt-5">
-              <h3 className="text-sm font-medium">Bench</h3>
-              {selected.bench.length === 0 ? (
-                <p className="text-sm text-black/60 dark:text-white/60">No one left over.</p>
-              ) : (
-                <p className="text-sm text-black/60 dark:text-white/60">
-                  {selected.bench.map((p) => p.name).join(", ")}
-                </p>
-              )}
-            </div>
           </div>
         </section>
       )}

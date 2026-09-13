@@ -82,48 +82,28 @@ export interface FormationRecommendation {
 }
 
 /**
- * Finds the best possible assignment of confirmed players onto a single
- * formation's slots, maximizing overall positional fit.
+ * Builds a full recommendation result (fit per slot, bench, score,
+ * warnings) from a concrete, already-decided assignment of players to
+ * slots. This is the shared tail end used both by the algorithmic
+ * {@link assignFormation} (which decides the assignment itself) and by
+ * manual, user-edited lineups (which just report whatever the user
+ * dragged into place) — so both paths render identically and share the
+ * same warnings logic.
  *
- * Uses the Hungarian algorithm on a square cost matrix padded with dummy
- * rows/columns so that:
- *  - real slots are always filled with a real player when enough players
- *    are confirmed, even if the fit is imperfect ("makeshift");
- *  - surplus players fall out naturally as bench;
- *  - slots are only left unfilled when there truly aren't enough players.
+ * `playerIdBySlot` only needs to cover the slots that are filled; missing
+ * or unknown player ids are treated as an empty slot.
  */
-export function assignFormation(
+export function buildRecommendationFromAssignment(
   players: Player[],
-  formation: Formation
+  formation: Formation,
+  playerIdBySlot: Record<string, string | null | undefined>
 ): FormationRecommendation {
-  const slots = formation.slots;
-  const n = Math.max(slots.length, players.length);
-  const DUMMY_COST = FIT_SCORE.PRIMARY + 1; // strictly worse than any real match
+  const playersById = new Map(players.map((p) => [p.id, p]));
+  const assignedIds = new Set<string>();
 
-  const cost: number[][] = [];
-  for (let i = 0; i < n; i++) {
-    const row: number[] = [];
-    for (let j = 0; j < n; j++) {
-      const isRealSlot = i < slots.length;
-      const isRealPlayer = j < players.length;
-      if (isRealSlot && isRealPlayer) {
-        const score = compatibilityScore(players[j], slots[i].position);
-        row.push(FIT_SCORE.PRIMARY - score); // convert to cost (lower is better)
-      } else {
-        row.push(DUMMY_COST);
-      }
-    }
-    cost.push(row);
-  }
-
-  const { rowAssignment } = solveAssignment(cost);
-
-  const usedPlayerIndexes = new Set<number>();
-  const slotAssignments: SlotAssignment[] = slots.map((slot, i) => {
-    const j = rowAssignment[i];
-    const isRealPlayer = j >= 0 && j < players.length;
-    const player = isRealPlayer ? players[j] : null;
-    if (isRealPlayer) usedPlayerIndexes.add(j);
+  const slotAssignments: SlotAssignment[] = formation.slots.map((slot) => {
+    const player = playersById.get(playerIdBySlot[slot.id] ?? "") ?? null;
+    if (player) assignedIds.add(player.id);
     return {
       slotId: slot.id,
       position: slot.position,
@@ -134,7 +114,7 @@ export function assignFormation(
     };
   });
 
-  const bench = players.filter((_, j) => !usedPlayerIndexes.has(j));
+  const bench = players.filter((p) => !assignedIds.has(p.id));
 
   const totalScore = slotAssignments.reduce((sum, s) => {
     if (!s.player) return sum;
@@ -171,10 +151,56 @@ export function assignFormation(
     slots: slotAssignments,
     bench,
     totalScore,
-    averageScore: slots.length > 0 ? totalScore / slots.length : 0,
+    averageScore: formation.slots.length > 0 ? totalScore / formation.slots.length : 0,
     unfilledSlots,
     warnings,
   };
+}
+
+/**
+ * Finds the best possible assignment of confirmed players onto a single
+ * formation's slots, maximizing overall positional fit.
+ *
+ * Uses the Hungarian algorithm on a square cost matrix padded with dummy
+ * rows/columns so that:
+ *  - real slots are always filled with a real player when enough players
+ *    are confirmed, even if the fit is imperfect ("makeshift");
+ *  - surplus players fall out naturally as bench;
+ *  - slots are only left unfilled when there truly aren't enough players.
+ */
+export function assignFormation(
+  players: Player[],
+  formation: Formation
+): FormationRecommendation {
+  const slots = formation.slots;
+  const n = Math.max(slots.length, players.length);
+  const DUMMY_COST = FIT_SCORE.PRIMARY + 1; // strictly worse than any real match
+
+  const cost: number[][] = [];
+  for (let i = 0; i < n; i++) {
+    const row: number[] = [];
+    for (let j = 0; j < n; j++) {
+      const isRealSlot = i < slots.length;
+      const isRealPlayer = j < players.length;
+      if (isRealSlot && isRealPlayer) {
+        const score = compatibilityScore(players[j], slots[i].position);
+        row.push(FIT_SCORE.PRIMARY - score); // convert to cost (lower is better)
+      } else {
+        row.push(DUMMY_COST);
+      }
+    }
+    cost.push(row);
+  }
+
+  const { rowAssignment } = solveAssignment(cost);
+
+  const playerIdBySlot: Record<string, string | null> = {};
+  slots.forEach((slot, i) => {
+    const j = rowAssignment[i];
+    playerIdBySlot[slot.id] = j >= 0 && j < players.length ? players[j].id : null;
+  });
+
+  return buildRecommendationFromAssignment(players, formation, playerIdBySlot);
 }
 
 /**
