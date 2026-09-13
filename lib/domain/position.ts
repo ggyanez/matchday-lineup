@@ -66,6 +66,32 @@ export function isPosition(value: string): value is Position {
   return (POSITIONS as readonly string[]).includes(value);
 }
 
+/**
+ * A role a player in this slot could alternatively be considered to be
+ * playing, one tactical "step" away (e.g. a fullback pushed higher becomes
+ * a wing back; a withdrawn striker becomes a second forward). Lets the
+ * Match Day board relabel a single slot — for scoring and display — without
+ * switching to a whole different formation. Empty when there's no sensible
+ * one-step alternative (goalkeeper, center back).
+ */
+export const POSITION_ALTERNATIVES: Record<Position, Position[]> = {
+  ARQ: [],
+  DFC: [],
+  LI: ["CAI"],
+  LD: ["CAD"],
+  CAI: ["LI", "MDI"],
+  CAD: ["LD", "MDD"],
+  MCD: ["MC"],
+  MC: ["MCD"],
+  MDI: ["EXI", "CAI"],
+  MDD: ["EXD", "CAD"],
+  MCO: ["SD"],
+  EXI: ["MDI"],
+  EXD: ["MDD"],
+  SD: ["DC", "MCO"],
+  DC: ["SD"],
+};
+
 /** Display order for grouping players by their line. */
 export const POSITION_GROUP_ORDER: PositionGroup[] = [
   "goalkeeper",

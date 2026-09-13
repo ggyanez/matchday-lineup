@@ -1,5 +1,5 @@
 import type { Player } from "@/lib/domain/player";
-import { POSITION_GROUP, isPosition, type PositionGroup } from "@/lib/domain/position";
+import { POSITION_GROUP, type Position, type PositionGroup } from "@/lib/domain/position";
 import InjuryBadge from "./InjuryBadge";
 
 /** Classic formation-editor coloring: the marker's color is the line being played, not how well-suited the player is to it. */
@@ -14,6 +14,9 @@ const FALLBACK_STYLE = "bg-black/60 border-black/70 text-white dark:bg-white/60 
 
 interface PlayerChipProps {
   player: Player;
+  /** Canonical position being played here, used purely to pick the marker's color — never shown as text (see `positionLabel` for that). Omitted on the bench, where color doesn't apply. */
+  position?: Position;
+  /** Localized text shown on the marker (e.g. "GK" in English, "ARQ" in Spanish). */
   positionLabel: string;
   /** "pitch" is a compact circle for the pitch diagram; "bench" is a wider pill. */
   variant?: "pitch" | "bench";
@@ -27,6 +30,7 @@ interface PlayerChipProps {
  */
 export default function PlayerChip({
   player,
+  position,
   positionLabel,
   variant = "pitch",
   dragging = false,
@@ -49,7 +53,7 @@ export default function PlayerChip({
   // (like a formation editor's jersey colors), not a judgment of fit —
   // whether someone's out of their usual position is called out in the
   // warnings list instead.
-  const style = isPosition(positionLabel) ? POSITION_GROUP_STYLES[POSITION_GROUP[positionLabel]] : FALLBACK_STYLE;
+  const style = position ? POSITION_GROUP_STYLES[POSITION_GROUP[position]] : FALLBACK_STYLE;
 
   return (
     <div className="flex flex-col items-center gap-1">

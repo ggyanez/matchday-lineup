@@ -1,4 +1,5 @@
 import type { FormationName } from "./domain/formation";
+import type { Position } from "./domain/position";
 import type { LineupResponse } from "./api-client";
 
 /**
@@ -18,6 +19,8 @@ export interface MatchDayDraft {
   activeFormation: FormationName | null;
   /** The board's current slotId -> playerId layout, which the user can freely edit by dragging. */
   assignments: Record<string, string | null>;
+  /** Per-slot position relabels (e.g. a DC slot the user set to play as SD), keyed by slot id. */
+  positionOverrides: Record<string, Position>;
 }
 
 const STORAGE_KEY = "matchday-lineup:draft:v2";
@@ -28,6 +31,7 @@ const EMPTY_DRAFT: MatchDayDraft = {
   result: null,
   activeFormation: null,
   assignments: {},
+  positionOverrides: {},
 };
 
 export function loadMatchDayDraft(): MatchDayDraft {

@@ -393,6 +393,27 @@ export const FORMATIONS: Record<FormationName, Formation> = {
 
 export const FORMATION_NAMES = Object.keys(FORMATIONS) as FormationName[];
 
+/**
+ * Returns a copy of the formation with the given slots relabeled to a
+ * different position — used to let the Match Day board evaluate a slot
+ * as one of its alternatives (see `POSITION_ALTERNATIVES` in
+ * `lib/domain/position.ts`) instead of its usual position, so the fit
+ * score and warnings reflect the role the user actually picked. Slots not
+ * present in `overrides` are left untouched.
+ */
+export function withPositionOverrides(
+  formation: Formation,
+  overrides: Record<string, Position>
+): Formation {
+  if (Object.keys(overrides).length === 0) return formation;
+  return {
+    ...formation,
+    slots: formation.slots.map((slot) =>
+      overrides[slot.id] ? { ...slot, position: overrides[slot.id] } : slot
+    ),
+  };
+}
+
 /** One-sentence tactical description of each formation, per language. */
 const FORMATION_DESCRIPTION_BY_LOCALE: Record<Locale, Record<FormationName, string>> = {
   es: {

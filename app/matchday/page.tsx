@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
+import PitchBoard, { type PositionOverrides, type SlotAssignments } from "@/components/PitchBoard";
 import InjuryBadge from "@/components/InjuryBadge";
 import { getMembershipStatusLabel, primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
   getPositionGroupLabel,
   POSITION_GROUP,
   POSITION_GROUP_ORDER,
+  type Position,
   type PositionGroup,
 } from "@/lib/domain/position";
 import {
   FORMATIONS,
   FORMATION_NAMES_BY_LINE_COUNTS,
   getFormationDescription,
+  withPositionOverrides,
   type FormationName,
 } from "@/lib/domain/formation";
 import {
@@ -81,6 +83,7 @@ export default function MatchDayPage() {
   const [result, setResult] = useState<LineupResponse | null>(null);
   const [activeFormationName, setActiveFormationName] = useState<FormationName | null>(null);
   const [assignments, setAssignments] = useState<SlotAssignments>({});
+  const [positionOverrides, setPositionOverrides] = useState<PositionOverrides>({});
   const [favoriteFormations, setFavoriteFormations] = useState<Set<FormationName>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
@@ -142,6 +145,7 @@ export default function MatchDayPage() {
     setResult(draft.result);
     setActiveFormationName(draft.activeFormation);
     setAssignments(draft.assignments);
+    setPositionOverrides(draft.positionOverrides);
     setRestored(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -156,8 +160,9 @@ export default function MatchDayPage() {
       result,
       activeFormation: activeFormationName,
       assignments,
+      positionOverrides,
     });
-  }, [restored, confirmed, explainWithAI, result, activeFormationName, assignments]);
+  }, [restored, confirmed, explainWithAI, result, activeFormationName, assignments, positionOverrides]);
 
   const confirmedPlayers = useMemo(
     () => players.filter((p) => confirmed.has(p.id)),
@@ -185,14 +190,22 @@ export default function MatchDayPage() {
 
   const activeFormation = activeFormationName ? FORMATIONS[activeFormationName] : null;
 
+  // The formation actually used for scoring/display, with any per-slot
+  // position overrides (see PitchBoard) applied on top of the canonical
+  // one — e.g. a DC slot the user relabeled as SD is evaluated as SD.
+  const effectiveFormation = useMemo(
+    () => (activeFormation ? withPositionOverrides(activeFormation, positionOverrides) : null),
+    [activeFormation, positionOverrides]
+  );
+
   // Recomputed live from the current (possibly hand-edited) assignments —
   // not frozen from whatever the algorithm originally suggested.
   const live = useMemo(
     () =>
-      activeFormation
-        ? buildRecommendationFromAssignment(confirmedPlayers, activeFormation, assignments, locale)
+      effectiveFormation
+        ? buildRecommendationFromAssignment(confirmedPlayers, effectiveFormation, assignments, locale)
         : null,
-    [activeFormation, confirmedPlayers, assignments, locale]
+    [effectiveFormation, confirmedPlayers, assignments, locale]
   );
 
   const isShowingGeneratedBest =
@@ -213,6 +226,20 @@ export default function MatchDayPage() {
   function openFormation(name: FormationName, initialAssignments: SlotAssignments = {}) {
     setActiveFormationName(name);
     setAssignments(initialAssignments);
+    setPositionOverrides({});
+  }
+
+  /** Relabels one slot as one of its tactical alternatives (or clears the override, if choosing the slot's own base position). */
+  function handlePositionOverrideChange(slotId: string, position: Position) {
+    const basePosition = activeFormation?.slots.find((s) => s.id === slotId)?.position;
+    setPositionOverrides((current) => {
+      if (position === basePosition) {
+        const next = { ...current };
+        delete next[slotId];
+        return next;
+      }
+      return { ...current, [slotId]: position };
+    });
   }
 
   async function handleGenerate() {
@@ -258,6 +285,7 @@ export default function MatchDayPage() {
     setResult(null);
     setActiveFormationName(null);
     setAssignments({});
+    setPositionOverrides({});
     setError(null);
     clearMatchDayDraft();
   }
@@ -407,6 +435,8 @@ export default function MatchDayPage() {
               players={confirmedPlayers}
               assignments={assignments}
               onAssignmentsChange={setAssignments}
+              positionOverrides={positionOverrides}
+              onPositionOverrideChange={handlePositionOverrideChange}
             />
           </div>
 
