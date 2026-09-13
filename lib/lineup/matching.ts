@@ -7,7 +7,15 @@ import { solveAssignment } from "./hungarian";
 
 /** How well a player fits a given position. Higher is better. */
 export const FIT_SCORE = {
-  PRIMARY: 3,
+  /** Score for a player's first-listed primary position. */
+  PRIMARY_BEST: 3,
+  /**
+   * Each primary position past the first is worth only slightly less —
+   * a player can be (almost) equally good at more than one position.
+   */
+  PRIMARY_RANK_DECAY: 0.1,
+  /** Floor for any listed primary position, comfortably above the best possible secondary score. */
+  PRIMARY_MIN: 2.7,
   /** Score for a player's first-listed (best) secondary position. */
   SECONDARY_BEST: 2,
   /** Each secondary position past the first is worth a bit less than the previous one. */
@@ -27,28 +35,36 @@ export type FitQuality = "primary" | "secondary" | "makeshift" | "unfilled";
 /**
  * Scores how well a player fits a position, and classifies that fit.
  *
- * Secondary positions are ranked by the order the player listed them in —
- * the first secondary position is treated as a better fit than the second,
- * and so on, decaying toward (but never below) `SECONDARY_MIN`.
+ * Both primary and secondary positions are ranked by the order the player
+ * listed them in — earlier entries are treated as a (slightly, for
+ * primary; more noticeably, for secondary) better fit than later ones.
  */
 export function evaluateFit(
   player: Player,
   position: Position
 ): { score: number; fit: Exclude<FitQuality, "unfilled"> } {
-  if (player.primaryPosition === position) {
-    return { score: FIT_SCORE.PRIMARY, fit: "primary" };
+  const primaryRank = player.primaryPositions.indexOf(position);
+  if (primaryRank !== -1) {
+    const score = Math.max(
+      FIT_SCORE.PRIMARY_MIN,
+      FIT_SCORE.PRIMARY_BEST - primaryRank * FIT_SCORE.PRIMARY_RANK_DECAY
+    );
+    return { score, fit: "primary" };
   }
 
-  const rank = player.secondaryPositions.indexOf(position);
-  if (rank !== -1) {
+  const secondaryRank = player.secondaryPositions.indexOf(position);
+  if (secondaryRank !== -1) {
     const score = Math.max(
       FIT_SCORE.SECONDARY_MIN,
-      FIT_SCORE.SECONDARY_BEST - rank * FIT_SCORE.SECONDARY_RANK_DECAY
+      FIT_SCORE.SECONDARY_BEST - secondaryRank * FIT_SCORE.SECONDARY_RANK_DECAY
     );
     return { score, fit: "secondary" };
   }
 
-  if (player.primaryPosition && POSITION_GROUP[player.primaryPosition] === POSITION_GROUP[position]) {
+  const sameLine = player.primaryPositions.some(
+    (p) => POSITION_GROUP[p] === POSITION_GROUP[position]
+  );
+  if (sameLine) {
     return { score: FIT_SCORE.SAME_LINE, fit: "makeshift" };
   }
 
@@ -174,7 +190,7 @@ export function assignFormation(
 ): FormationRecommendation {
   const slots = formation.slots;
   const n = Math.max(slots.length, players.length);
-  const DUMMY_COST = FIT_SCORE.PRIMARY + 1; // strictly worse than any real match
+  const DUMMY_COST = FIT_SCORE.PRIMARY_BEST + 1; // strictly worse than any real match
 
   const cost: number[][] = [];
   for (let i = 0; i < n; i++) {
@@ -184,7 +200,7 @@ export function assignFormation(
       const isRealPlayer = j < players.length;
       if (isRealSlot && isRealPlayer) {
         const score = compatibilityScore(players[j], slots[i].position);
-        row.push(FIT_SCORE.PRIMARY - score); // convert to cost (lower is better)
+        row.push(FIT_SCORE.PRIMARY_BEST - score); // convert to cost (lower is better)
       } else {
         row.push(DUMMY_COST);
       }

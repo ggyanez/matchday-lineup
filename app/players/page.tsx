@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
-import type { Player, PlayerInput } from "@/lib/domain/player";
+import { primaryPositionLabel, type Player, type PlayerInput } from "@/lib/domain/player";
 import {
   createPlayerRequest,
   deletePlayerRequest,
@@ -100,7 +100,7 @@ export default function PlayersPage() {
                 <div>
                   <p className="font-medium">{player.name}</p>
                   <p className="text-sm text-black/60 dark:text-white/60">
-                    {player.primaryPosition ?? (
+                    {primaryPositionLabel(player) || (
                       <span className="italic text-amber-600 dark:text-amber-400">
                         No position set
                       </span>

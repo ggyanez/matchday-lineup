@@ -11,7 +11,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import type { Formation } from "@/lib/domain/formation";
-import type { Player } from "@/lib/domain/player";
+import { primaryPositionLabel, type Player } from "@/lib/domain/player";
 import { evaluateFit } from "@/lib/lineup/matching";
 import DroppableSlot, { SLOT_DROP_PREFIX } from "./DroppableSlot";
 import DroppableBench, { BENCH_DROP_ID } from "./DroppableBench";
@@ -129,7 +129,7 @@ export default function PitchBoard({
         {activePlayer && (
           <PlayerChip
             player={activePlayer}
-            positionLabel={activeSlot ? activeSlot.position : activePlayer.primaryPosition ?? "?"}
+            positionLabel={activeSlot ? activeSlot.position : primaryPositionLabel(activePlayer) || "?"}
             fit={activeSlot ? evaluateFit(activePlayer, activeSlot.position).fit : undefined}
             variant={activeSlot ? "pitch" : "bench"}
             dragging

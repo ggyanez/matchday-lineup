@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   const player = await createPlayer({
     name: body.name,
-    primaryPosition: body.primaryPosition || null,
+    primaryPositions: body.primaryPositions ?? [],
     secondaryPositions: body.secondaryPositions ?? [],
     notes: body.notes,
   });

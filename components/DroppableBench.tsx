@@ -1,7 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import type { Player } from "@/lib/domain/player";
+import { primaryPositionLabel, type Player } from "@/lib/domain/player";
 import DraggablePlayer from "./DraggablePlayer";
 
 export const BENCH_DROP_ID = "bench";
@@ -33,7 +33,7 @@ export default function DroppableBench({ players }: DroppableBenchProps) {
             <DraggablePlayer
               key={player.id}
               player={player}
-              positionLabel={player.primaryPosition ?? "?"}
+              positionLabel={primaryPositionLabel(player) || "?"}
               variant="bench"
             />
           ))}

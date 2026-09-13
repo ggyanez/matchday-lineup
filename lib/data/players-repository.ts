@@ -11,14 +11,30 @@ function generateId(): string {
   return `p_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/**
+ * Upgrades records saved before a player could have more than one primary
+ * position (`primaryPosition: Position | null` -> `primaryPositions:
+ * Position[]`). Safe to run on already-migrated records — they pass
+ * through unchanged.
+ */
+function migratePlayer(raw: Player & { primaryPosition?: string | null }): Player {
+  if (Array.isArray(raw.primaryPositions)) return raw;
+  const { primaryPosition, ...rest } = raw;
+  return {
+    ...rest,
+    primaryPositions: primaryPosition ? [primaryPosition as Player["primaryPositions"][number]] : [],
+  };
+}
+
 export async function listPlayers(): Promise<Player[]> {
   const { players } = await store.read();
-  return [...players].sort((a, b) => a.name.localeCompare(b.name));
+  return players.map(migratePlayer).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getPlayer(id: string): Promise<Player | null> {
   const { players } = await store.read();
-  return players.find((p) => p.id === id) ?? null;
+  const found = players.find((p) => p.id === id);
+  return found ? migratePlayer(found) : null;
 }
 
 export async function createPlayer(input: PlayerInput): Promise<Player> {
@@ -26,7 +42,7 @@ export async function createPlayer(input: PlayerInput): Promise<Player> {
   const player: Player = {
     id: generateId(),
     name: input.name.trim(),
-    primaryPosition: input.primaryPosition,
+    primaryPositions: input.primaryPositions ?? [],
     secondaryPositions: input.secondaryPositions ?? [],
     notes: input.notes?.trim() || undefined,
     createdAt: now,
@@ -48,9 +64,9 @@ export async function updatePlayer(id: string, input: PlayerInput): Promise<Play
     const players = doc.players.map((p) => {
       if (p.id !== id) return p;
       updated = {
-        ...p,
+        ...migratePlayer(p),
         name: input.name.trim(),
-        primaryPosition: input.primaryPosition,
+        primaryPositions: input.primaryPositions ?? [],
         secondaryPositions: input.secondaryPositions ?? [],
         notes: input.notes?.trim() || undefined,
         updatedAt: new Date().toISOString(),

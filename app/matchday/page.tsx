@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
-import type { Player } from "@/lib/domain/player";
+import { primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
   FORMATIONS,
   FORMATION_NAMES_BY_LINE_COUNTS,
@@ -172,7 +172,7 @@ export default function MatchDayPage() {
                 />
                 <span>{player.name}</span>
                 <span className="text-black/50 dark:text-white/50">
-                  ({player.primaryPosition ?? "no position"})
+                  ({primaryPositionLabel(player) || "no position"})
                 </span>
               </label>
             ))}
