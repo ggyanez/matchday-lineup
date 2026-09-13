@@ -56,8 +56,14 @@ export const POSITION_GROUP: Record<Position, PositionGroup> = {
   DFC: "defense",
   LI: "defense",
   LD: "defense",
-  CAI: "defense",
-  CAD: "defense",
+  // Wing backs are genuinely ambiguous — part of the back line in a 5-at-the-back
+  // system, but functionally more like wide midfielders in a back three (which is
+  // the more common reading of "carrilero"). Grouped as midfield: it makes for a
+  // more sensible same-line fallback (a central midfielder deputizing out wide
+  // beats a central back doing the same) and matches how most coaches would
+  // categorize this player when scanning a squad list.
+  CAI: "midfield",
+  CAD: "midfield",
   MCD: "midfield",
   MC: "midfield",
   MDI: "midfield",
