@@ -11,7 +11,7 @@ const STRINGS = {
   es: {
     "nav.players": "Jugadores",
     "nav.formations": "Formaciones",
-    "nav.matchday": "Alineación",
+    "nav.matchday": "Próxima Fecha",
 
     "home.subtitle":
       "Llevá el control de las posiciones de tu plantel, marcá quién está confirmado para el próximo partido, y conseguí un once inicial recomendado a partir de los jugadores que realmente tenés disponibles — se acabó adivinar la alineación una hora antes.",
@@ -79,7 +79,7 @@ const STRINGS = {
     "formations.loading": "Cargando...",
     "formations.saveError": "No se pudo guardar — probá de nuevo.",
 
-    "matchday.heading": "Alineación",
+    "matchday.heading": "Próxima Fecha",
     "matchday.subtitle":
       "Confirmá quién está disponible para este partido, generá la alineación que mejor encaje, y después arrastrá jugadores entre los puestos y el banco para ajustarla.",
     "matchday.confirmedPlayers": "Jugadores confirmados",
@@ -110,7 +110,7 @@ const STRINGS = {
   en: {
     "nav.players": "Players",
     "nav.formations": "Formations",
-    "nav.matchday": "Lineup",
+    "nav.matchday": "Next Matchday",
 
     "home.subtitle":
       "Keep track of your squad's positions, mark who's confirmed for the next match, and get a recommended starting eleven built from the players you actually have available — no more guessing the lineup an hour before kickoff.",
@@ -178,7 +178,7 @@ const STRINGS = {
     "formations.loading": "Loading...",
     "formations.saveError": "Could not save that — try again.",
 
-    "matchday.heading": "Lineup",
+    "matchday.heading": "Next Matchday",
     "matchday.subtitle":
       "Confirm who's available for this match, generate the best-fitting lineup, then drag players between slots and the bench to fine-tune it.",
     "matchday.confirmedPlayers": "Confirmed players",
