@@ -4,13 +4,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FORMATIONS,
   FORMATION_NAMES_BY_LINE_COUNTS,
+  getFormationDescription,
   getLineCounts,
   type FormationName,
 } from "@/lib/domain/formation";
 import { fetchFavoriteFormations, saveFavoriteFormations } from "@/lib/api-client";
 import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
+import { useLocale } from "@/lib/i18n/LocaleContext";
+import { formatAtTheBack, formatFavorite } from "@/lib/i18n/translations";
 
 export default function FormationsPage() {
+  const { locale, t } = useLocale();
   const [favorites, setFavorites] = useState<Set<FormationName>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<FormationName | null>(null);
@@ -54,7 +58,7 @@ export default function FormationsPage() {
       await saveFavoriteFormations([...next]);
     } catch {
       setFavorites(favorites); // revert
-      setError("Could not save that — try again.");
+      setError(t("formations.saveError"));
     } finally {
       setSaving(null);
     }
@@ -62,26 +66,22 @@ export default function FormationsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">Formations</h1>
-      <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-        Star the formations your team actually uses — they&apos;ll show first (marked ★) in
-        the Match Day formation picker.
-      </p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t("formations.heading")}</h1>
+      <p className="mt-2 text-sm text-black/60 dark:text-white/60">{t("formations.subtitle")}</p>
 
       {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {loading ? (
-        <p className="mt-6 text-sm text-black/60 dark:text-white/60">Loading...</p>
+        <p className="mt-6 text-sm text-black/60 dark:text-white/60">{t("formations.loading")}</p>
       ) : (
         <div className="mt-8 flex flex-col gap-8">
           {groups.map(([defenders, names]) => (
             <section key={defenders}>
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
-                {defenders} at the back
+                {formatAtTheBack(locale, defenders)}
               </h2>
               <ul className="grid gap-2 sm:grid-cols-2">
                 {names.map((name) => {
-                  const formation = FORMATIONS[name];
                   const isFavorite = favorites.has(name);
                   return (
                     <li
@@ -92,7 +92,7 @@ export default function FormationsPage() {
                         type="button"
                         onClick={() => toggleFavorite(name)}
                         disabled={saving === name}
-                        aria-label={isFavorite ? `Unfavorite ${name}` : `Favorite ${name}`}
+                        aria-label={formatFavorite(locale, name, isFavorite)}
                         aria-pressed={isFavorite}
                         className={`mt-0.5 text-lg leading-none disabled:opacity-40 ${
                           isFavorite
@@ -105,7 +105,7 @@ export default function FormationsPage() {
                       <div>
                         <p className="font-medium">{name}</p>
                         <p className="text-sm text-black/60 dark:text-white/60">
-                          {formation.description}
+                          {getFormationDescription(name, locale)}
                         </p>
                       </div>
                     </li>

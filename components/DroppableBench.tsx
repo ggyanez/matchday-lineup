@@ -2,6 +2,7 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { primaryPositionLabel, type Player } from "@/lib/domain/player";
+import { useLocale } from "@/lib/i18n/LocaleContext";
 import DraggablePlayer from "./DraggablePlayer";
 
 export const BENCH_DROP_ID = "bench";
@@ -13,6 +14,7 @@ interface DroppableBenchProps {
 /** Drop a player here to unassign them from the pitch. */
 export default function DroppableBench({ players }: DroppableBenchProps) {
   const { setNodeRef, isOver } = useDroppable({ id: BENCH_DROP_ID });
+  const { locale, t } = useLocale();
 
   return (
     <div
@@ -24,16 +26,14 @@ export default function DroppableBench({ players }: DroppableBenchProps) {
       }`}
     >
       {players.length === 0 ? (
-        <p className="text-sm text-black/40 dark:text-white/40">
-          Everyone confirmed is on the pitch.
-        </p>
+        <p className="text-sm text-black/40 dark:text-white/40">{t("matchday.benchEmpty")}</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {players.map((player) => (
             <DraggablePlayer
               key={player.id}
               player={player}
-              positionLabel={primaryPositionLabel(player) || "?"}
+              positionLabel={primaryPositionLabel(player, locale) || "?"}
               variant="bench"
             />
           ))}

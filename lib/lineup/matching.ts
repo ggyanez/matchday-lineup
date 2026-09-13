@@ -1,8 +1,9 @@
 import type { Player } from "../domain/player";
 import type { Position } from "../domain/position";
-import { POSITION_GROUP } from "../domain/position";
+import { POSITION_GROUP, getPositionCode } from "../domain/position";
 import type { Formation, FormationName, FormationSlot } from "../domain/formation";
-import { FORMATIONS } from "../domain/formation";
+import { FORMATIONS, getFormationDescription } from "../domain/formation";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/locale";
 import { solveAssignment } from "./hungarian";
 
 /** How well a player fits a given position. Higher is better. */
@@ -144,6 +145,33 @@ export interface FormationRecommendation {
   warnings: string[];
 }
 
+const INJURY_WORD: Record<Locale, Record<"minor" | "major", string>> = {
+  es: { minor: "leve", major: "grave" },
+  en: { minor: "minor", major: "major" },
+};
+
+const WARNING_TEXT = {
+  es: {
+    unfilledSlots: (count: number) =>
+      `${count} puesto(s) sin cubrir — no hay suficientes jugadores confirmados.`,
+    noGoalkeeper: (name: string) =>
+      `No hay un arquero natural entre los confirmados — ${name} está cubriendo el puesto.`,
+    outOfPosition: (count: number, list: string) =>
+      `${count} jugador(es) están fuera de su posición habitual: ${list}.`,
+    playingInjured: (list: string) => `Jugando lesionado: ${list}.`,
+    at: (name: string, code: string) => `${name} de ${code}`,
+  },
+  en: {
+    unfilledSlots: (count: number) =>
+      `${count} slot(s) could not be filled — not enough confirmed players.`,
+    noGoalkeeper: (name: string) => `No natural goalkeeper among confirmed players — ${name} is filling in.`,
+    outOfPosition: (count: number, list: string) =>
+      `${count} player(s) are out of their usual positions: ${list}.`,
+    playingInjured: (list: string) => `Playing while injured: ${list}.`,
+    at: (name: string, code: string) => `${name} at ${code}`,
+  },
+} as const;
+
 /**
  * Builds a full recommendation result (fit per slot, bench, score,
  * warnings) from a concrete, already-decided assignment of players to
@@ -159,10 +187,12 @@ export interface FormationRecommendation {
 export function buildRecommendationFromAssignment(
   players: Player[],
   formation: Formation,
-  playerIdBySlot: Record<string, string | null | undefined>
+  playerIdBySlot: Record<string, string | null | undefined>,
+  locale: Locale = DEFAULT_LOCALE
 ): FormationRecommendation {
   const playersById = new Map(players.map((p) => [p.id, p]));
   const assignedIds = new Set<string>();
+  const text = WARNING_TEXT[locale];
 
   const slotAssignments: SlotAssignment[] = formation.slots.map((slot) => {
     const player = playersById.get(playerIdBySlot[slot.id] ?? "") ?? null;
@@ -187,41 +217,36 @@ export function buildRecommendationFromAssignment(
 
   const warnings: string[] = [];
   if (unfilledSlots > 0) {
-    warnings.push(
-      `${unfilledSlots} slot(s) could not be filled — not enough confirmed players.`
-    );
+    warnings.push(text.unfilledSlots(unfilledSlots));
   }
   const goalkeeperSlot = slotAssignments.find((s) => s.position === "ARQ");
-  if (goalkeeperSlot && goalkeeperSlot.fit === "makeshift") {
-    warnings.push(
-      `No natural goalkeeper among confirmed players — ${goalkeeperSlot.player?.name} is filling in.`
-    );
+  if (goalkeeperSlot && goalkeeperSlot.fit === "makeshift" && goalkeeperSlot.player) {
+    warnings.push(text.noGoalkeeper(goalkeeperSlot.player.name));
   }
   const makeshiftOutfield = slotAssignments.filter(
-    (s) => s.fit === "makeshift" && s.position !== "ARQ"
+    (s): s is SlotAssignment & { player: Player } =>
+      s.fit === "makeshift" && s.position !== "ARQ" && s.player != null
   );
   if (makeshiftOutfield.length > 0) {
-    warnings.push(
-      `${makeshiftOutfield.length} player(s) are out of their usual positions: ` +
-        makeshiftOutfield.map((s) => `${s.player?.name} at ${s.position}`).join(", ") +
-        "."
-    );
+    const list = makeshiftOutfield
+      .map((s) => text.at(s.player.name, getPositionCode(s.position, locale)))
+      .join(", ");
+    warnings.push(text.outOfPosition(makeshiftOutfield.length, list));
   }
 
   const injured = slotAssignments.filter(
     (s): s is SlotAssignment & { player: Player } => s.player != null && s.player.injuryStatus !== "healthy"
   );
   if (injured.length > 0) {
-    warnings.push(
-      `Playing while injured: ` +
-        injured.map((s) => `${s.player.name} (${s.player.injuryStatus})`).join(", ") +
-        "."
-    );
+    const list = injured
+      .map((s) => `${s.player.name} (${INJURY_WORD[locale][s.player.injuryStatus as "minor" | "major"]})`)
+      .join(", ");
+    warnings.push(text.playingInjured(list));
   }
 
   return {
     formation: formation.name,
-    description: formation.description,
+    description: getFormationDescription(formation.name, locale),
     slots: slotAssignments,
     bench,
     totalScore,
@@ -244,7 +269,8 @@ export function buildRecommendationFromAssignment(
  */
 export function assignFormation(
   players: Player[],
-  formation: Formation
+  formation: Formation,
+  locale: Locale = DEFAULT_LOCALE
 ): FormationRecommendation {
   const slots = formation.slots;
   const n = Math.max(slots.length, players.length);
@@ -274,7 +300,7 @@ export function assignFormation(
     playerIdBySlot[slot.id] = j >= 0 && j < players.length ? players[j].id : null;
   });
 
-  return buildRecommendationFromAssignment(players, formation, playerIdBySlot);
+  return buildRecommendationFromAssignment(players, formation, playerIdBySlot, locale);
 }
 
 /**
@@ -283,10 +309,11 @@ export function assignFormation(
  */
 export function recommendFormations(
   players: Player[],
-  candidates: FormationName[] = Object.keys(FORMATIONS) as FormationName[]
+  candidates: FormationName[] = Object.keys(FORMATIONS) as FormationName[],
+  locale: Locale = DEFAULT_LOCALE
 ): FormationRecommendation[] {
   return candidates
-    .map((name) => assignFormation(players, FORMATIONS[name]))
+    .map((name) => assignFormation(players, FORMATIONS[name], locale))
     .sort((a, b) => {
       if (a.unfilledSlots !== b.unfilledSlots) return a.unfilledSlots - b.unfilledSlots;
       return b.averageScore - a.averageScore;

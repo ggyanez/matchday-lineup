@@ -1,4 +1,5 @@
 import type { Position } from "./position";
+import type { Locale } from "../i18n/locale";
 
 /**
  * A single spot on the pitch that a formation needs to fill.
@@ -48,14 +49,12 @@ export type FormationName =
 
 export interface Formation {
   name: FormationName;
-  description: string;
   slots: FormationSlot[];
 }
 
 export const FORMATIONS: Record<FormationName, Formation> = {
   "4-4-2": {
     name: "4-4-2",
-    description: "Balanced, two banks of four behind a strike partnership.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -72,7 +71,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-4-2 diamond": {
     name: "4-4-2 diamond",
-    description: "A narrow central diamond feeds two strikers, trading width for control.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -89,7 +87,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-4-1-1": {
     name: "4-4-1-1",
-    description: "A withdrawn forward links midfield and attack, feeding the striker ahead.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -106,7 +103,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-3-3": {
     name: "4-3-3",
-    description: "Width from the wingers, control through a midfield trio.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -123,7 +119,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-2-3-1": {
     name: "4-2-3-1",
-    description: "Double pivot shielding the back four, one out-and-out striker.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -140,7 +135,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-1-4-1": {
     name: "4-1-4-1",
-    description: "A holding midfielder shields the back four, freeing a flat four ahead of them.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -157,8 +151,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-3-2-1": {
     name: "4-3-2-1",
-    description:
-      "The 'Christmas tree' — two withdrawn forwards feed a lone striker in a narrow shape.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -175,7 +167,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-2-2-2": {
     name: "4-2-2-2",
-    description: "The 'magic square' — a double pivot and two attacking mids support two strikers.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -192,7 +183,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-2-4": {
     name: "4-2-4",
-    description: "Maximum width and numbers up front, with just two central midfielders behind it.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -209,8 +199,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-1-3-2": {
     name: "4-1-3-2",
-    description:
-      "A defensive midfielder anchors the back four, freeing three attacking mids and two strikers.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -227,7 +215,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "4-5-1": {
     name: "4-5-1",
-    description: "Extra body in midfield, a lone striker up top.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -244,7 +231,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "3-4-3": {
     name: "3-4-3",
-    description: "Three center backs, attacking width from the flanks.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
@@ -261,7 +247,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "3-4-2-1": {
     name: "3-4-2-1",
-    description: "Wing backs provide the width, with two withdrawn forwards feeding a lone striker.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
@@ -278,7 +263,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "3-4-1-2": {
     name: "3-4-1-2",
-    description: "Wing backs and a single playmaker support an orthodox strike partnership.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
@@ -295,7 +279,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "3-5-2": {
     name: "3-5-2",
-    description: "Wing backs provide the width, packed midfield, two strikers.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
@@ -312,7 +295,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "3-1-4-2": {
     name: "3-1-4-2",
-    description: "A deep-lying midfielder shields the back three, freeing a busy four and two strikers.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
@@ -329,7 +311,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "3-5-1-1": {
     name: "3-5-1-1",
-    description: "Wing backs and a five-man midfield support a withdrawn forward playing off a striker.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
@@ -346,7 +327,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "5-3-2": {
     name: "5-3-2",
-    description: "Five at the back for a settled defense, direct two up top.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
@@ -363,7 +343,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "5-4-1": {
     name: "5-4-1",
-    description: "Five at the back, a flat four ahead of them, and one out-and-out striker.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
@@ -380,7 +359,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "5-2-2-1": {
     name: "5-2-2-1",
-    description: "A settled back five and double pivot, with two attacking mids behind one striker.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
@@ -397,7 +375,6 @@ export const FORMATIONS: Record<FormationName, Formation> = {
   },
   "5-2-3": {
     name: "5-2-3",
-    description: "Wing backs sit in a back five while width up front comes from advanced wingers.",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
@@ -415,6 +392,64 @@ export const FORMATIONS: Record<FormationName, Formation> = {
 };
 
 export const FORMATION_NAMES = Object.keys(FORMATIONS) as FormationName[];
+
+/** One-sentence tactical description of each formation, per language. */
+const FORMATION_DESCRIPTION_BY_LOCALE: Record<Locale, Record<FormationName, string>> = {
+  es: {
+    "4-4-2": "Equilibrado, dos líneas de cuatro detrás de una dupla de ataque.",
+    "4-4-2 diamond": "Un rombo central angosto alimenta a dos delanteros, a cambio de ancho por afuera.",
+    "4-4-1-1": "Un delantero retrasado conecta el medio con el ataque, alimentando al delantero de área.",
+    "4-3-3": "Ancho por los extremos, control del juego con un trío de mediocampistas.",
+    "4-2-3-1": "Doble cinco que protege la línea de cuatro, con un solo delantero de área.",
+    "4-1-4-1": "Un mediocampista de contención protege la defensa, liberando una línea de cuatro por delante.",
+    "4-3-2-1":
+      "El 'árbol de Navidad' — dos enganches retrasados alimentan a un solo delantero en un esquema angosto.",
+    "4-2-2-2": "El 'cuadrado mágico' — doble cinco y dos enganches sostienen a una dupla de ataque.",
+    "4-2-4": "Máximo ancho y gente arriba, con solo dos mediocampistas centrales de sostén.",
+    "4-1-3-2":
+      "Un cinco protege la línea de cuatro, liberando a tres mediocampistas ofensivos y dos delanteros.",
+    "4-5-1": "Un jugador extra en el medio, un solo delantero de área arriba.",
+    "3-4-3": "Tres centrales, ancho ofensivo por las bandas.",
+    "3-4-2-1": "Los carrileros dan el ancho, con dos enganches retrasados alimentando a un solo delantero.",
+    "3-4-1-2": "Carrileros y un solo enganche sostienen a una dupla de área ortodoxa.",
+    "3-5-2": "Los carrileros dan el ancho, mediocampo cargado, dos delanteros.",
+    "3-1-4-2":
+      "Un mediocampista retrasado protege la línea de tres, liberando un mediocampo cargado y dos delanteros.",
+    "3-5-1-1":
+      "Carrileros y un mediocampo de cinco sostienen a un delantero retrasado jugando con otro de área.",
+    "5-3-2": "Línea de cinco para una defensa sólida, dos delanteros directos arriba.",
+    "5-4-1": "Línea de cinco, una línea de cuatro por delante, y un solo delantero de área.",
+    "5-2-2-1": "Línea de cinco sólida y doble cinco, con dos enganches detrás de un delantero.",
+    "5-2-3": "Los carrileros se quedan atrás en la línea de cinco, mientras el ancho llega por los extremos adelantados.",
+  },
+  en: {
+    "4-4-2": "Balanced, two banks of four behind a strike partnership.",
+    "4-4-2 diamond": "A narrow central diamond feeds two strikers, trading width for control.",
+    "4-4-1-1": "A withdrawn forward links midfield and attack, feeding the striker ahead.",
+    "4-3-3": "Width from the wingers, control through a midfield trio.",
+    "4-2-3-1": "Double pivot shielding the back four, one out-and-out striker.",
+    "4-1-4-1": "A holding midfielder shields the back four, freeing a flat four ahead of them.",
+    "4-3-2-1": "The 'Christmas tree' — two withdrawn forwards feed a lone striker in a narrow shape.",
+    "4-2-2-2": "The 'magic square' — a double pivot and two attacking mids support two strikers.",
+    "4-2-4": "Maximum width and numbers up front, with just two central midfielders behind it.",
+    "4-1-3-2": "A defensive midfielder anchors the back four, freeing three attacking mids and two strikers.",
+    "4-5-1": "Extra body in midfield, a lone striker up top.",
+    "3-4-3": "Three center backs, attacking width from the flanks.",
+    "3-4-2-1": "Wing backs provide the width, with two withdrawn forwards feeding a lone striker.",
+    "3-4-1-2": "Wing backs and a single playmaker support an orthodox strike partnership.",
+    "3-5-2": "Wing backs provide the width, packed midfield, two strikers.",
+    "3-1-4-2": "A deep-lying midfielder shields the back three, freeing a busy four and two strikers.",
+    "3-5-1-1": "Wing backs and a five-man midfield support a withdrawn forward playing off a striker.",
+    "5-3-2": "Five at the back for a settled defense, direct two up top.",
+    "5-4-1": "Five at the back, a flat four ahead of them, and one out-and-out striker.",
+    "5-2-2-1": "A settled back five and double pivot, with two attacking mids behind one striker.",
+    "5-2-3": "Wing backs sit in a back five while width up front comes from advanced wingers.",
+  },
+};
+
+export function getFormationDescription(name: FormationName, locale: Locale): string {
+  return FORMATION_DESCRIPTION_BY_LOCALE[locale][name];
+}
 
 /** How many players make up each of a formation's lines, per its own name. */
 export interface FormationLineCounts {

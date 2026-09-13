@@ -5,14 +5,15 @@ import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
 import InjuryBadge from "@/components/InjuryBadge";
 import { primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
+  getPositionGroupLabel,
   POSITION_GROUP,
-  POSITION_GROUP_LABELS,
   POSITION_GROUP_ORDER,
   type PositionGroup,
 } from "@/lib/domain/position";
 import {
   FORMATIONS,
   FORMATION_NAMES_BY_LINE_COUNTS,
+  getFormationDescription,
   type FormationName,
 } from "@/lib/domain/formation";
 import {
@@ -24,6 +25,8 @@ import {
 import { buildRecommendationFromAssignment, type SlotAssignment } from "@/lib/lineup/matching";
 import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
 import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
+import { useLocale } from "@/lib/i18n/LocaleContext";
+import { formatForce } from "@/lib/i18n/translations";
 
 function assignmentsFromSlots(slots: SlotAssignment[]): SlotAssignments {
   return Object.fromEntries(slots.map((s) => [s.slotId, s.player?.id ?? null]));
@@ -68,6 +71,7 @@ function playersChangedSinceGeneration(result: LineupResponse, currentPlayers: P
 }
 
 export default function MatchDayPage() {
+  const { locale, t } = useLocale();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
@@ -185,9 +189,9 @@ export default function MatchDayPage() {
   const live = useMemo(
     () =>
       activeFormation
-        ? buildRecommendationFromAssignment(confirmedPlayers, activeFormation, assignments)
+        ? buildRecommendationFromAssignment(confirmedPlayers, activeFormation, assignments, locale)
         : null,
-    [activeFormation, confirmedPlayers, assignments]
+    [activeFormation, confirmedPlayers, assignments, locale]
   );
 
   const isShowingGeneratedBest =
@@ -216,11 +220,12 @@ export default function MatchDayPage() {
     try {
       const response = await generateLineup(Array.from(confirmed), {
         explain: explainWithAI,
+        locale,
       });
       setResult(response);
       openFormation(response.best.formation, assignmentsFromSlots(response.best.slots));
     } catch {
-      setError("Could not generate a lineup. Try confirming at least one player.");
+      setError(t("matchday.generateError"));
     } finally {
       setGenerating(false);
     }
@@ -235,11 +240,12 @@ export default function MatchDayPage() {
       const response = await generateLineup(Array.from(confirmed), {
         explain: explainWithAI,
         formations: [activeFormationName],
+        locale,
       });
       setResult(response);
       openFormation(response.best.formation, assignmentsFromSlots(response.best.slots));
     } catch {
-      setError("Could not fit confirmed players into this formation.");
+      setError(t("matchday.forceError"));
     } finally {
       setGenerating(false);
     }
@@ -257,19 +263,18 @@ export default function MatchDayPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">Match Day</h1>
-      <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-        Confirm who&apos;s available for this match, generate the best-fitting lineup, then drag
-        players between slots and the bench to fine-tune it.
-      </p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t("matchday.heading")}</h1>
+      <p className="mt-2 text-sm text-black/60 dark:text-white/60">{t("matchday.subtitle")}</p>
 
       <section className="mt-6">
-        <h2 className="text-sm font-medium">Confirmed players</h2>
+        <h2 className="text-sm font-medium">{t("matchday.confirmedPlayers")}</h2>
         {loading ? (
-          <p className="mt-2 text-sm text-black/60 dark:text-white/60">Loading players...</p>
+          <p className="mt-2 text-sm text-black/60 dark:text-white/60">
+            {t("matchday.loadingPlayers")}
+          </p>
         ) : players.length === 0 ? (
           <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-            No players registered yet — add some on the Players page first.
+            {t("matchday.noPlayersYet")}
           </p>
         ) : (
           <div className="mt-3 flex flex-col gap-5">
@@ -279,7 +284,9 @@ export default function MatchDayPage() {
               return (
                 <div key={group}>
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
-                    {group === "none" ? "No position set" : POSITION_GROUP_LABELS[group]}
+                    {group === "none"
+                      ? t("matchday.noPositionSet")
+                      : getPositionGroupLabel(group, locale)}
                   </h3>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {groupPlayers.map((player) => (
@@ -297,7 +304,7 @@ export default function MatchDayPage() {
                           <InjuryBadge status={player.injuryStatus} />
                         </span>
                         <span className="text-black/50 dark:text-white/50">
-                          ({primaryPositionLabel(player) || "no position"})
+                          ({primaryPositionLabel(player, locale) || t("matchday.noPositionInline")})
                         </span>
                       </label>
                     ))}
@@ -315,7 +322,7 @@ export default function MatchDayPage() {
           disabled={confirmed.size === 0 || generating}
           className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
         >
-          {generating ? "Generating..." : "Generate recommended lineup"}
+          {generating ? t("matchday.generating") : t("matchday.generate")}
         </button>
         <label className="flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
           <input
@@ -323,11 +330,11 @@ export default function MatchDayPage() {
             checked={explainWithAI}
             onChange={(e) => setExplainWithAI(e.target.checked)}
           />
-          Explain with AI
+          {t("matchday.explainWithAI")}
         </label>
 
         <label className="flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
-          or build manually:
+          {t("matchday.orBuildManually")}
           <select
             value={activeFormationName ?? ""}
             onChange={(e) => {
@@ -337,7 +344,7 @@ export default function MatchDayPage() {
             disabled={confirmed.size === 0}
             className="rounded border border-black/20 bg-transparent px-2 py-1 dark:border-white/20"
           >
-            <option value="">Choose a formation…</option>
+            <option value="">{t("matchday.chooseFormation")}</option>
             {orderedFormationNames.map((name) => (
               <option key={name} value={name}>
                 {favoriteFormations.has(name) ? `★ ${name}` : name}
@@ -350,10 +357,10 @@ export default function MatchDayPage() {
           <button
             onClick={handleForceFormation}
             disabled={confirmed.size === 0 || generating}
-            title="Fill this exact formation with the best assignment of confirmed players"
+            title={t("matchday.forceTitle")}
             className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
           >
-            {generating ? "Assigning..." : `Force ${activeFormationName}`}
+            {generating ? t("matchday.assigning") : formatForce(locale, activeFormationName)}
           </button>
         )}
 
@@ -362,7 +369,7 @@ export default function MatchDayPage() {
             onClick={handleReset}
             className="text-sm text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
           >
-            Reset
+            {t("matchday.reset")}
           </button>
         )}
       </section>
@@ -399,7 +406,9 @@ export default function MatchDayPage() {
 
           <div>
             <h2 className="text-lg font-medium">{activeFormation.name}</h2>
-            <p className="text-sm text-black/60 dark:text-white/60">{activeFormation.description}</p>
+            <p className="text-sm text-black/60 dark:text-white/60">
+              {getFormationDescription(activeFormation.name, locale)}
+            </p>
 
             {live.warnings.length > 0 && (
               <ul className="mt-3 space-y-1 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
@@ -414,8 +423,7 @@ export default function MatchDayPage() {
                 <p>{result.explanation}</p>
                 {!isShowingGeneratedBest && (
                   <p className="mt-2 text-xs italic text-black/50 dark:text-white/50">
-                    The lineup or a player&apos;s details (position, foot, injury) have changed
-                    since this was generated — the explanation above may be out of date.
+                    {t("matchday.staleExplanationNote")}
                   </p>
                 )}
               </div>

@@ -1,4 +1,7 @@
-import { INJURY_STATUS_LABELS, type InjuryStatus } from "@/lib/domain/player";
+"use client";
+
+import { getInjuryStatusLabel, type InjuryStatus } from "@/lib/domain/player";
+import { useLocale } from "@/lib/i18n/LocaleContext";
 
 const INJURY_COLOR: Record<Exclude<InjuryStatus, "healthy">, string> = {
   minor: "text-yellow-500",
@@ -17,13 +20,11 @@ interface InjuryBadgeProps {
  * name unconditionally.
  */
 export default function InjuryBadge({ status, className = "" }: InjuryBadgeProps) {
+  const { locale } = useLocale();
   if (status === "healthy") return null;
+  const label = getInjuryStatusLabel(status, locale);
   return (
-    <span
-      className={`${INJURY_COLOR[status]} ${className}`}
-      title={INJURY_STATUS_LABELS[status]}
-      aria-label={INJURY_STATUS_LABELS[status]}
-    >
+    <span className={`${INJURY_COLOR[status]} ${className}`} title={label} aria-label={label}>
       ✚
     </span>
   );

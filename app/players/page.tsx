@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
 import PositionTooltip from "@/components/PositionTooltip";
 import InjuryBadge from "@/components/InjuryBadge";
-import { PREFERRED_FOOT_LABELS, type Player, type PlayerInput } from "@/lib/domain/player";
-import type { Position } from "@/lib/domain/position";
+import { getPreferredFootLabel, type Player, type PlayerInput } from "@/lib/domain/player";
+import { getPositionCode, type Position } from "@/lib/domain/position";
+import { useLocale } from "@/lib/i18n/LocaleContext";
+import { formatRemoveConfirm } from "@/lib/i18n/translations";
 import {
   createPlayerRequest,
   deletePlayerRequest,
@@ -15,14 +17,14 @@ import {
 import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
 
 /** Renders a "ARQ/DFC"-style list where each code has its own hover tooltip. */
-function PositionBadgeList({ positions }: { positions: Position[] }) {
+function PositionBadgeList({ positions, locale }: { positions: Position[]; locale: "es" | "en" }) {
   return (
     <>
       {positions.map((position, i) => (
         <span key={position}>
           <PositionTooltip position={position}>
             <span className="cursor-help underline decoration-dotted decoration-black/30 underline-offset-2 dark:decoration-white/30">
-              {position}
+              {getPositionCode(position, locale)}
             </span>
           </PositionTooltip>
           {i < positions.length - 1 && "/"}
@@ -33,6 +35,7 @@ function PositionBadgeList({ positions }: { positions: Position[] }) {
 }
 
 export default function PlayersPage() {
+  const { locale, t } = useLocale();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -80,7 +83,7 @@ export default function PlayersPage() {
   }
 
   async function handleDelete(player: Player) {
-    if (!confirm(`Remove ${player.name} from the squad?`)) return;
+    if (!confirm(formatRemoveConfirm(locale, player.name))) return;
     await deletePlayerRequest(player.id);
     await load();
   }
@@ -88,13 +91,13 @@ export default function PlayersPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Players</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("players.heading")}</h1>
         {!showForm && !editing && (
           <button
             onClick={() => setShowForm(true)}
             className="rounded bg-black px-4 py-2 text-sm text-white dark:bg-white dark:text-black"
           >
-            Add player
+            {t("players.addPlayer")}
           </button>
         )}
       </div>
@@ -117,11 +120,9 @@ export default function PlayersPage() {
 
       <div className="mt-8">
         {loading ? (
-          <p className="text-sm text-black/60 dark:text-white/60">Loading...</p>
+          <p className="text-sm text-black/60 dark:text-white/60">{t("players.loading")}</p>
         ) : players.length === 0 ? (
-          <p className="text-sm text-black/60 dark:text-white/60">
-            No players yet. Add your first one to get started.
-          </p>
+          <p className="text-sm text-black/60 dark:text-white/60">{t("players.empty")}</p>
         ) : (
           <ul className="divide-y divide-black/10 dark:divide-white/10">
             {players.map((player) => (
@@ -133,19 +134,19 @@ export default function PlayersPage() {
                   </p>
                   <p className="text-sm text-black/60 dark:text-white/60">
                     {player.primaryPositions.length > 0 ? (
-                      <PositionBadgeList positions={player.primaryPositions} />
+                      <PositionBadgeList positions={player.primaryPositions} locale={locale} />
                     ) : (
                       <span className="italic text-amber-600 dark:text-amber-400">
-                        No position set
+                        {t("players.noPositionSet")}
                       </span>
                     )}
                     {player.secondaryPositions.length > 0 && (
                       <>
-                        {" · also: "}
-                        <PositionBadgeList positions={player.secondaryPositions} />
+                        {t("players.alsoLabel")}
+                        <PositionBadgeList positions={player.secondaryPositions} locale={locale} />
                       </>
                     )}
-                    {player.preferredFoot && ` · ${PREFERRED_FOOT_LABELS[player.preferredFoot]}`}
+                    {player.preferredFoot && ` · ${getPreferredFootLabel(player.preferredFoot, locale)}`}
                   </p>
                 </div>
                 <div className="flex gap-3 text-sm">
@@ -156,13 +157,13 @@ export default function PlayersPage() {
                     }}
                     className="text-black/70 hover:text-black dark:text-white/70 dark:hover:text-white"
                   >
-                    Edit
+                    {t("players.edit")}
                   </button>
                   <button
                     onClick={() => handleDelete(player)}
                     className="text-red-600 hover:text-red-700 dark:text-red-400"
                   >
-                    Remove
+                    {t("players.remove")}
                   </button>
                 </div>
               </li>

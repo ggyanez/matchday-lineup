@@ -1,6 +1,7 @@
 import type { Player, PlayerInput } from "./domain/player";
 import type { FormationName } from "./domain/formation";
 import type { FormationRecommendation } from "./lineup/matching";
+import type { Locale } from "./i18n/locale";
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -41,7 +42,7 @@ export interface LineupResponse {
 
 export function generateLineup(
   playerIds: string[],
-  options?: { formations?: FormationName[]; explain?: boolean }
+  options?: { formations?: FormationName[]; explain?: boolean; locale?: Locale }
 ): Promise<LineupResponse> {
   return request("/api/lineup", {
     method: "POST",

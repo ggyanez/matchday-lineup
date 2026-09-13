@@ -1,4 +1,7 @@
-import { POSITION_DESCRIPTIONS, POSITION_LABELS, type Position } from "@/lib/domain/position";
+"use client";
+
+import { getPositionCode, getPositionDescription, getPositionName, type Position } from "@/lib/domain/position";
+import { useLocale } from "@/lib/i18n/LocaleContext";
 
 interface PositionTooltipProps {
   position: Position;
@@ -14,6 +17,7 @@ interface PositionTooltipProps {
  * no library.
  */
 export default function PositionTooltip({ position, children, className }: PositionTooltipProps) {
+  const { locale } = useLocale();
   return (
     <span className={`group relative inline-flex ${className ?? ""}`}>
       {children}
@@ -22,10 +26,10 @@ export default function PositionTooltip({ position, children, className }: Posit
         className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-md bg-black px-2.5 py-1.5 text-xs opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-white"
       >
         <strong className="block text-white dark:text-black">
-          {position} — {POSITION_LABELS[position]}
+          {getPositionCode(position, locale)} — {getPositionName(position, locale)}
         </strong>
         <span className="mt-0.5 block text-white/70 dark:text-black/70">
-          {POSITION_DESCRIPTIONS[position]}
+          {getPositionDescription(position, locale)}
         </span>
       </span>
     </span>

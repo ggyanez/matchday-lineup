@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { POSITIONS, POSITION_LABELS, type Position } from "@/lib/domain/position";
+import { getPositionCode, getPositionName, POSITIONS, type Position } from "@/lib/domain/position";
 import {
+  getInjuryStatusLabel,
+  getPreferredFootLabel,
   INJURY_STATUSES,
-  INJURY_STATUS_LABELS,
   PREFERRED_FEET,
-  PREFERRED_FOOT_LABELS,
   type InjuryStatus,
   type Player,
   type PlayerInput,
   type PreferredFoot,
 } from "@/lib/domain/player";
+import { formatMoveDown, formatMoveUp, formatRemoveCode } from "@/lib/i18n/translations";
+import { useLocale } from "@/lib/i18n/LocaleContext";
 import PositionTooltip from "./PositionTooltip";
 import InjuryBadge from "./InjuryBadge";
 
@@ -40,6 +42,7 @@ function PositionOrderPicker({
   onToggle,
   onMove,
 }: PositionOrderPickerProps) {
+  const { locale } = useLocale();
   return (
     <fieldset className="mt-4">
       <legend className="text-sm">{legend}</legend>
@@ -58,7 +61,7 @@ function PositionOrderPicker({
                     : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
                 }`}
               >
-                {p}
+                {getPositionCode(p, locale)}
               </button>
             </PositionTooltip>
           );
@@ -67,45 +70,48 @@ function PositionOrderPicker({
 
       {selected.length > 0 && (
         <ol className="mt-3 flex flex-col gap-1">
-          {selected.map((p, i) => (
-            <li
-              key={p}
-              className="flex items-center gap-2 rounded border border-black/10 px-2 py-1 text-sm dark:border-white/10"
-            >
-              <span className="w-4 text-black/40 dark:text-white/40">{i + 1}.</span>
-              <PositionTooltip position={p} className="flex-1 cursor-help">
-                <span>
-                  {p} — {POSITION_LABELS[p]}
-                </span>
-              </PositionTooltip>
-              <button
-                type="button"
-                onClick={() => onMove(i, -1)}
-                disabled={i === 0}
-                aria-label={`Move ${p} up`}
-                className="disabled:opacity-30"
+          {selected.map((p, i) => {
+            const code = getPositionCode(p, locale);
+            return (
+              <li
+                key={p}
+                className="flex items-center gap-2 rounded border border-black/10 px-2 py-1 text-sm dark:border-white/10"
               >
-                ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => onMove(i, 1)}
-                disabled={i === selected.length - 1}
-                aria-label={`Move ${p} down`}
-                className="disabled:opacity-30"
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                onClick={() => onToggle(p)}
-                aria-label={`Remove ${p}`}
-                className="text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
-              >
-                ✕
-              </button>
-            </li>
-          ))}
+                <span className="w-4 text-black/40 dark:text-white/40">{i + 1}.</span>
+                <PositionTooltip position={p} className="flex-1 cursor-help">
+                  <span>
+                    {code} — {getPositionName(p, locale)}
+                  </span>
+                </PositionTooltip>
+                <button
+                  type="button"
+                  onClick={() => onMove(i, -1)}
+                  disabled={i === 0}
+                  aria-label={formatMoveUp(locale, code)}
+                  className="disabled:opacity-30"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onMove(i, 1)}
+                  disabled={i === selected.length - 1}
+                  aria-label={formatMoveDown(locale, code)}
+                  className="disabled:opacity-30"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggle(p)}
+                  aria-label={formatRemoveCode(locale, code)}
+                  className="text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
+                >
+                  ✕
+                </button>
+              </li>
+            );
+          })}
         </ol>
       )}
     </fieldset>
@@ -121,6 +127,7 @@ function moveInList<T>(list: T[], index: number, direction: -1 | 1): T[] {
 }
 
 export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormProps) {
+  const { locale, t } = useLocale();
   const [name, setName] = useState(initial?.name ?? "");
   const [primaryPositions, setPrimaryPositions] = useState<Position[]>(
     initial?.primaryPositions ?? []
@@ -153,7 +160,7 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Name is required.");
+      setError(t("form.nameRequired"));
       return;
     }
     setSubmitting(true);
@@ -168,7 +175,7 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
         notes: notes.trim() || undefined,
       });
     } catch {
-      setError("Something went wrong saving this player. Please try again.");
+      setError(t("form.saveError"));
     } finally {
       setSubmitting(false);
     }
@@ -180,19 +187,18 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
       className="rounded-lg border border-black/10 p-5 dark:border-white/10"
     >
       <label className="flex flex-col gap-1 text-sm">
-        Name
+        {t("form.nameLabel")}
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="rounded border border-black/20 bg-transparent px-3 py-2 dark:border-white/20"
-          placeholder="e.g. Diego Gómez"
+          placeholder={t("form.namePlaceholder")}
         />
       </label>
 
       <PositionOrderPicker
-        legend="Primary positions (leave empty if not set yet)"
-        hint="Tap to add. A player can be equally good in more than one position — order still
-          gives the first one a slight edge, so list the strongest first."
+        legend={t("form.primaryLegend")}
+        hint={t("form.primaryHint")}
         selected={primaryPositions}
         excluded={secondaryPositions}
         onToggle={togglePrimary}
@@ -200,9 +206,8 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
       />
 
       <PositionOrderPicker
-        legend="Secondary positions (can also cover)"
-        hint="Tap to add. Order matters — the matching algorithm treats the first one as
-          a better fit than the last, so list them from strongest to weakest."
+        legend={t("form.secondaryLegend")}
+        hint={t("form.secondaryHint")}
         selected={secondaryPositions}
         excluded={primaryPositions}
         onToggle={toggleSecondary}
@@ -211,11 +216,8 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <fieldset>
-          <legend className="text-sm">Preferred foot</legend>
-          <p className="mt-1 text-xs text-black/50 dark:text-white/50">
-            Used to prefer the more strongly-sided slot among interchangeable ones (e.g. a
-            left-sided center back among three).
-          </p>
+          <legend className="text-sm">{t("form.footLegend")}</legend>
+          <p className="mt-1 text-xs text-black/50 dark:text-white/50">{t("form.footHint")}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {PREFERRED_FEET.map((foot) => {
               const active = preferredFoot === foot;
@@ -230,7 +232,7 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
                       : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
                   }`}
                 >
-                  {PREFERRED_FOOT_LABELS[foot]}
+                  {getPreferredFootLabel(foot, locale)}
                 </button>
               );
             })}
@@ -238,11 +240,8 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
         </fieldset>
 
         <fieldset>
-          <legend className="text-sm">Injury status</legend>
-          <p className="mt-1 text-xs text-black/50 dark:text-white/50">
-            An injured player can still be confirmed for a match, but the recommendation
-            treats them as a last resort.
-          </p>
+          <legend className="text-sm">{t("form.injuryLegend")}</legend>
+          <p className="mt-1 text-xs text-black/50 dark:text-white/50">{t("form.injuryHint")}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {INJURY_STATUSES.map((status) => {
               const active = injuryStatus === status;
@@ -258,7 +257,7 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
                   }`}
                 >
                   <InjuryBadge status={status} />
-                  {INJURY_STATUS_LABELS[status]}
+                  {getInjuryStatusLabel(status, locale)}
                 </button>
               );
             })}
@@ -267,7 +266,7 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
       </div>
 
       <label className="mt-4 flex flex-col gap-1 text-sm">
-        Notes (optional)
+        {t("form.notesLabel")}
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -284,14 +283,14 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
           disabled={submitting}
           className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
         >
-          {submitting ? "Saving..." : initial ? "Save changes" : "Add player"}
+          {submitting ? t("form.saving") : initial ? t("form.saveChanges") : t("players.addPlayer")}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="rounded border border-black/20 px-4 py-2 text-sm dark:border-white/20"
         >
-          Cancel
+          {t("form.cancel")}
         </button>
       </div>
     </form>

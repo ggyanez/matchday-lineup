@@ -1,22 +1,45 @@
-import type { Position } from "./position";
+import type { Locale } from "../i18n/locale";
+import { getPositionCode, type Position } from "./position";
 
 export const PREFERRED_FEET = ["left", "right", "both"] as const;
 export type PreferredFoot = (typeof PREFERRED_FEET)[number];
 
-export const PREFERRED_FOOT_LABELS: Record<PreferredFoot, string> = {
-  left: "Left-footed",
-  right: "Right-footed",
-  both: "Two-footed",
+const PREFERRED_FOOT_LABEL_BY_LOCALE: Record<Locale, Record<PreferredFoot, string>> = {
+  es: {
+    left: "Zurdo",
+    right: "Diestro",
+    both: "Ambidiestro",
+  },
+  en: {
+    left: "Left-footed",
+    right: "Right-footed",
+    both: "Two-footed",
+  },
 };
+
+export function getPreferredFootLabel(foot: PreferredFoot, locale: Locale): string {
+  return PREFERRED_FOOT_LABEL_BY_LOCALE[locale][foot];
+}
 
 export const INJURY_STATUSES = ["healthy", "minor", "major"] as const;
 export type InjuryStatus = (typeof INJURY_STATUSES)[number];
 
-export const INJURY_STATUS_LABELS: Record<InjuryStatus, string> = {
-  healthy: "Healthy",
-  minor: "Minor injury",
-  major: "Major injury",
+const INJURY_STATUS_LABEL_BY_LOCALE: Record<Locale, Record<InjuryStatus, string>> = {
+  es: {
+    healthy: "Sano",
+    minor: "Lesión leve",
+    major: "Lesión grave",
+  },
+  en: {
+    healthy: "Healthy",
+    minor: "Minor injury",
+    major: "Major injury",
+  },
 };
+
+export function getInjuryStatusLabel(status: InjuryStatus, locale: Locale): string {
+  return INJURY_STATUS_LABEL_BY_LOCALE[locale][status];
+}
 
 export interface Player {
   id: string;
@@ -74,7 +97,7 @@ export function isValidPlayerInput(input: Partial<PlayerInput>): input is Player
   return true;
 }
 
-/** A short "CB/RB" style label for a player's primary positions, or "" if none are set. */
-export function primaryPositionLabel(player: Pick<Player, "primaryPositions">): string {
-  return player.primaryPositions.join("/");
+/** A short "CB/RB" style label for a player's primary positions in the given language, or "" if none are set. */
+export function primaryPositionLabel(player: Pick<Player, "primaryPositions">, locale: Locale): string {
+  return player.primaryPositions.map((p) => getPositionCode(p, locale)).join("/");
 }

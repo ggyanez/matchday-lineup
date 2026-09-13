@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { FormationRecommendation } from "../lineup/matching";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/locale";
 
 const DEFAULT_MODEL = "claude-sonnet-5";
 
@@ -12,7 +13,8 @@ const DEFAULT_MODEL = "claude-sonnet-5";
  */
 export async function explainRecommendation(
   best: FormationRecommendation,
-  alternatives: FormationRecommendation[]
+  alternatives: FormationRecommendation[],
+  locale: Locale = DEFAULT_LOCALE
 ): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
@@ -20,7 +22,7 @@ export async function explainRecommendation(
   const client = new Anthropic({ apiKey });
   const model = process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
 
-  const prompt = buildPrompt(best, alternatives);
+  const prompt = buildPrompt(best, alternatives, locale);
 
   try {
     const response = await client.messages.create({
@@ -39,7 +41,8 @@ export async function explainRecommendation(
 
 function buildPrompt(
   best: FormationRecommendation,
-  alternatives: FormationRecommendation[]
+  alternatives: FormationRecommendation[],
+  locale: Locale
 ): string {
   const lineup = best.slots
     .map((s) => `- ${s.position} (${s.slotId}): ${s.player ? s.player.name : "unfilled"} [${s.fit}]`)
@@ -65,6 +68,7 @@ function buildPrompt(
     `Bench: ${bench}`,
     best.warnings.length > 0 ? `Warnings: ${best.warnings.join(" ")}` : "",
     alternativesSummary ? `Other formations considered: ${alternativesSummary}` : "",
+    locale === "es" ? "Respond in Spanish." : "Respond in English.",
   ]
     .filter(Boolean)
     .join("\n");

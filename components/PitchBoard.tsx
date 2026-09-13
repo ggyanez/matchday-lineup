@@ -12,6 +12,8 @@ import {
 } from "@dnd-kit/core";
 import type { Formation } from "@/lib/domain/formation";
 import { primaryPositionLabel, type Player } from "@/lib/domain/player";
+import { getPositionCode } from "@/lib/domain/position";
+import { useLocale } from "@/lib/i18n/LocaleContext";
 import DroppableSlot, { SLOT_DROP_PREFIX } from "./DroppableSlot";
 import DroppableBench, { BENCH_DROP_ID } from "./DroppableBench";
 import PlayerChip from "./PlayerChip";
@@ -39,6 +41,7 @@ export default function PitchBoard({
   onAssignmentsChange,
 }: PitchBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const { locale, t } = useLocale();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -111,7 +114,7 @@ export default function PitchBoard({
               slotId={slot.id}
               x={slot.x}
               y={slot.y}
-              position={slot.position}
+              position={getPositionCode(slot.position, locale)}
               player={player}
             />
           );
@@ -119,7 +122,7 @@ export default function PitchBoard({
       </div>
 
       <div className="mt-4">
-        <h3 className="mb-2 text-sm font-medium">Bench</h3>
+        <h3 className="mb-2 text-sm font-medium">{t("matchday.bench")}</h3>
         <DroppableBench players={bench} />
       </div>
 
@@ -127,7 +130,11 @@ export default function PitchBoard({
         {activePlayer && (
           <PlayerChip
             player={activePlayer}
-            positionLabel={activeSlot ? activeSlot.position : primaryPositionLabel(activePlayer) || "?"}
+            positionLabel={
+              activeSlot
+                ? getPositionCode(activeSlot.position, locale)
+                : primaryPositionLabel(activePlayer, locale) || "?"
+            }
             variant={activeSlot ? "pitch" : "bench"}
             dragging
           />
