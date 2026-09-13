@@ -1,17 +1,18 @@
 import type { Player } from "@/lib/domain/player";
-import type { FitQuality } from "@/lib/lineup/matching";
+import { POSITION_GROUP, isPosition, type PositionGroup } from "@/lib/domain/position";
 
-export const FIT_STYLES: Record<FitQuality, string> = {
-  primary: "bg-emerald-600 border-emerald-700 text-white",
-  secondary: "bg-sky-600 border-sky-700 text-white",
-  makeshift: "bg-amber-500 border-amber-600 text-white",
-  unfilled: "border-dashed border-black/30 text-black/40 dark:border-white/30 dark:text-white/40",
+/** Classic formation-editor coloring: the marker's color is the line being played, not how well-suited the player is to it. */
+export const POSITION_GROUP_STYLES: Record<PositionGroup, string> = {
+  goalkeeper: "bg-yellow-400 border-yellow-600 text-yellow-950",
+  defense: "bg-sky-600 border-sky-700 text-white",
+  midfield: "bg-emerald-600 border-emerald-700 text-white",
+  attack: "bg-red-600 border-red-700 text-white",
 };
+
+const FALLBACK_STYLE = "bg-black/60 border-black/70 text-white dark:bg-white/60 dark:border-white/70";
 
 interface PlayerChipProps {
   player: Player;
-  /** Only meaningful for the "pitch" variant — bench players aren't fit against any slot. */
-  fit?: FitQuality;
   positionLabel: string;
   /** "pitch" is a compact circle for the pitch diagram; "bench" is a wider pill. */
   variant?: "pitch" | "bench";
@@ -25,7 +26,6 @@ interface PlayerChipProps {
  */
 export default function PlayerChip({
   player,
-  fit,
   positionLabel,
   variant = "pitch",
   dragging = false,
@@ -41,10 +41,16 @@ export default function PlayerChip({
     );
   }
 
+  // On the pitch, the marker's color is the position being played there
+  // (like a formation editor's jersey colors), not a judgment of fit —
+  // whether someone's out of their usual position is called out in the
+  // warnings list instead.
+  const style = isPosition(positionLabel) ? POSITION_GROUP_STYLES[POSITION_GROUP[positionLabel]] : FALLBACK_STYLE;
+
   return (
     <div className="flex flex-col items-center gap-1">
       <div
-        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-semibold shadow-sm ${FIT_STYLES[fit ?? "unfilled"]} ${dragging ? "shadow-lg" : ""}`}
+        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-semibold shadow-sm ${style} ${dragging ? "shadow-lg" : ""}`}
       >
         {positionLabel}
       </div>

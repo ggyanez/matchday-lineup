@@ -12,7 +12,6 @@ import {
 } from "@dnd-kit/core";
 import type { Formation } from "@/lib/domain/formation";
 import { primaryPositionLabel, type Player } from "@/lib/domain/player";
-import { evaluateFit } from "@/lib/lineup/matching";
 import DroppableSlot, { SLOT_DROP_PREFIX } from "./DroppableSlot";
 import DroppableBench, { BENCH_DROP_ID } from "./DroppableBench";
 import PlayerChip from "./PlayerChip";
@@ -114,7 +113,6 @@ export default function PitchBoard({
               y={slot.y}
               position={slot.position}
               player={player}
-              fit={player ? evaluateFit(player, slot.position).fit : "unfilled"}
             />
           );
         })}
@@ -130,7 +128,6 @@ export default function PitchBoard({
           <PlayerChip
             player={activePlayer}
             positionLabel={activeSlot ? activeSlot.position : primaryPositionLabel(activePlayer) || "?"}
-            fit={activeSlot ? evaluateFit(activePlayer, activeSlot.position).fit : undefined}
             variant={activeSlot ? "pitch" : "bench"}
             dragging
           />

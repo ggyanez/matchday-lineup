@@ -3,12 +3,10 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { Player } from "@/lib/domain/player";
-import type { FitQuality } from "@/lib/lineup/matching";
 import PlayerChip from "./PlayerChip";
 
 interface DraggablePlayerProps {
   player: Player;
-  fit?: FitQuality;
   positionLabel: string;
   variant?: "pitch" | "bench";
 }
@@ -16,7 +14,6 @@ interface DraggablePlayerProps {
 /** A player chip that can be picked up and dropped onto a slot or the bench. */
 export default function DraggablePlayer({
   player,
-  fit,
   positionLabel,
   variant = "pitch",
 }: DraggablePlayerProps) {
@@ -36,7 +33,7 @@ export default function DraggablePlayer({
       }`}
       aria-label={`Drag ${player.name}`}
     >
-      <PlayerChip player={player} fit={fit} positionLabel={positionLabel} variant={variant} />
+      <PlayerChip player={player} positionLabel={positionLabel} variant={variant} />
     </button>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import type { Player } from "@/lib/domain/player";
-import type { FitQuality } from "@/lib/lineup/matching";
 import DraggablePlayer from "./DraggablePlayer";
 
 export const SLOT_DROP_PREFIX = "slot:";
@@ -13,10 +12,9 @@ interface DroppableSlotProps {
   y: number;
   position: string;
   player: Player | null;
-  fit: FitQuality;
 }
 
-export default function DroppableSlot({ slotId, x, y, position, player, fit }: DroppableSlotProps) {
+export default function DroppableSlot({ slotId, x, y, position, player }: DroppableSlotProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `${SLOT_DROP_PREFIX}${slotId}` });
 
   return (
@@ -28,7 +26,7 @@ export default function DroppableSlot({ slotId, x, y, position, player, fit }: D
       style={{ left: `${x}%`, bottom: `${y}%` }}
     >
       {player ? (
-        <DraggablePlayer player={player} fit={fit} positionLabel={position} variant="pitch" />
+        <DraggablePlayer player={player} positionLabel={position} variant="pitch" />
       ) : (
         <div className="flex flex-col items-center gap-1">
           <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed border-white/50 text-xs font-semibold text-white/60">
