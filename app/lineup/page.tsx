@@ -350,7 +350,7 @@ export default function MatchDayPage() {
       </section>
 
       <section className="mt-6 flex flex-col gap-4">
-        {/* Default path: pick a formation, then generate the best lineup for it. */}
+        {/* Two ways to get a lineup, side by side so it's clear it's one or the other. */}
         <div className="flex flex-wrap items-center gap-3">
           <select
             value={activeFormationName ?? ""}
@@ -376,14 +376,13 @@ export default function MatchDayPage() {
           >
             {generating ? t("matchday.generatingButton") : t("matchday.generateButton")}
           </button>
-        </div>
 
-        {/* Secondary path: let the algorithm pick the best formation for you. */}
-        <div>
+          <span className="text-sm text-black/40 dark:text-white/40">{t("matchday.or")}</span>
+
           <button
             onClick={handleGenerate}
             disabled={confirmed.size === 0 || generating}
-            className="rounded border border-black/20 px-4 py-2 text-sm text-black/70 disabled:opacity-50 dark:border-white/20 dark:text-white/70"
+            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
           >
             {generating ? t("matchday.recommendingButton") : t("matchday.recommendButton")}
           </button>

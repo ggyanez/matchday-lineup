@@ -6,10 +6,11 @@ import { useLocale } from "@/lib/i18n/LocaleContext";
 export default function NavBar() {
   const { locale, setLocale, t } = useLocale();
 
+  // The Lineup section comes first and stands out — it's the app's core
+  // feature; Players and Formations are just the supporting record-keeping.
   const links = [
     { href: "/players", label: t("nav.players") },
     { href: "/formations", label: t("nav.formations") },
-    { href: "/matchday", label: t("nav.matchday") },
   ];
 
   return (
@@ -20,6 +21,12 @@ export default function NavBar() {
         </Link>
         <div className="flex items-center gap-6">
           <nav className="flex gap-6 text-sm">
+            <Link
+              href="/lineup"
+              className="font-semibold text-black hover:opacity-70 dark:text-white"
+            >
+              {t("nav.matchday")}
+            </Link>
             {links.map((link) => (
               <Link
                 key={link.href}

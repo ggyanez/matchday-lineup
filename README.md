@@ -105,7 +105,7 @@ secret environment variable — never committed.
 ```
 app/
   players/         Squad management page
-  matchday/         Lineup generation page
+  lineup/           Lineup generation page
   api/players/      Player CRUD endpoints
   api/lineup/        Lineup generation endpoint
 lib/

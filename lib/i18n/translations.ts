@@ -11,7 +11,7 @@ const STRINGS = {
   es: {
     "nav.players": "Jugadores",
     "nav.formations": "Formaciones",
-    "nav.matchday": "Fecha",
+    "nav.matchday": "Alineación",
 
     "home.subtitle":
       "Llevá el control de las posiciones de tu plantel, marcá quién está confirmado para el próximo partido, y conseguí un once inicial recomendado a partir de los jugadores que realmente tenés disponibles — se acabó adivinar la alineación una hora antes.",
@@ -21,7 +21,7 @@ const STRINGS = {
     "home.cardFormations.title": "Formaciones",
     "home.cardFormations.description":
       "Marcá con estrella las formaciones que usa tu equipo, para que aparezcan primero al elegir una en Fecha.",
-    "home.cardMatchday.title": "Armar una Fecha",
+    "home.cardMatchday.title": "Armar la Alineación",
     "home.cardMatchday.description":
       "Elegí quién está confirmado y conseguí la formación y alineación que mejor le queden a este plantel.",
 
@@ -79,7 +79,7 @@ const STRINGS = {
     "formations.loading": "Cargando...",
     "formations.saveError": "No se pudo guardar — probá de nuevo.",
 
-    "matchday.heading": "Fecha",
+    "matchday.heading": "Alineación",
     "matchday.subtitle":
       "Confirmá quién está disponible para este partido, generá la alineación que mejor encaje, y después arrastrá jugadores entre los puestos y el banco para ajustarla.",
     "matchday.confirmedPlayers": "Jugadores confirmados",
@@ -92,6 +92,7 @@ const STRINGS = {
     "matchday.generatingButton": "Generando...",
     "matchday.forceTitle":
       "Completa esta formación exacta con la mejor asignación de los jugadores confirmados",
+    "matchday.or": "o",
     "matchday.recommendButton": "Recomendar Alineación",
     "matchday.recommendingButton": "Recomendando...",
     "matchday.explainWithAI": "Explicar con IA",
@@ -109,7 +110,7 @@ const STRINGS = {
   en: {
     "nav.players": "Players",
     "nav.formations": "Formations",
-    "nav.matchday": "Match Day",
+    "nav.matchday": "Lineup",
 
     "home.subtitle":
       "Keep track of your squad's positions, mark who's confirmed for the next match, and get a recommended starting eleven built from the players you actually have available — no more guessing the lineup an hour before kickoff.",
@@ -119,7 +120,7 @@ const STRINGS = {
     "home.cardFormations.title": "Formations",
     "home.cardFormations.description":
       "Star the formations your team actually uses, so they show up first when picking one in Match Day.",
-    "home.cardMatchday.title": "Build a Match Day",
+    "home.cardMatchday.title": "Build the Lineup",
     "home.cardMatchday.description":
       "Select who's confirmed and get the best-fitting formation and lineup for this squad.",
 
@@ -177,7 +178,7 @@ const STRINGS = {
     "formations.loading": "Loading...",
     "formations.saveError": "Could not save that — try again.",
 
-    "matchday.heading": "Match Day",
+    "matchday.heading": "Lineup",
     "matchday.subtitle":
       "Confirm who's available for this match, generate the best-fitting lineup, then drag players between slots and the bench to fine-tune it.",
     "matchday.confirmedPlayers": "Confirmed players",
@@ -189,6 +190,7 @@ const STRINGS = {
     "matchday.generateButton": "Generate Lineup",
     "matchday.generatingButton": "Generating...",
     "matchday.forceTitle": "Fill this exact formation with the best assignment of confirmed players",
+    "matchday.or": "or",
     "matchday.recommendButton": "Recommend Lineup",
     "matchday.recommendingButton": "Recommending...",
     "matchday.explainWithAI": "Explain with AI",
