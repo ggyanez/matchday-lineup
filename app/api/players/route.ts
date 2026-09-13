@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     name: body.name,
     primaryPositions: body.primaryPositions ?? [],
     secondaryPositions: body.secondaryPositions ?? [],
+    preferredFoot: body.preferredFoot ?? null,
+    injuryStatus: body.injuryStatus ?? "healthy",
     notes: body.notes,
   });
 

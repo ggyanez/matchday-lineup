@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
 import PositionTooltip from "@/components/PositionTooltip";
-import type { Player, PlayerInput } from "@/lib/domain/player";
+import InjuryBadge from "@/components/InjuryBadge";
+import { PREFERRED_FOOT_LABELS, type Player, type PlayerInput } from "@/lib/domain/player";
 import type { Position } from "@/lib/domain/position";
 import {
   createPlayerRequest,
@@ -126,7 +127,10 @@ export default function PlayersPage() {
             {players.map((player) => (
               <li key={player.id} className="flex items-center justify-between py-3">
                 <div>
-                  <p className="font-medium">{player.name}</p>
+                  <p className="flex items-center gap-1.5 font-medium">
+                    {player.name}
+                    <InjuryBadge status={player.injuryStatus} />
+                  </p>
                   <p className="text-sm text-black/60 dark:text-white/60">
                     {player.primaryPositions.length > 0 ? (
                       <PositionBadgeList positions={player.primaryPositions} />
@@ -141,6 +145,7 @@ export default function PlayersPage() {
                         <PositionBadgeList positions={player.secondaryPositions} />
                       </>
                     )}
+                    {player.preferredFoot && ` · ${PREFERRED_FOOT_LABELS[player.preferredFoot]}`}
                   </p>
                 </div>
                 <div className="flex gap-3 text-sm">

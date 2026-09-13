@@ -1,5 +1,6 @@
 import type { Player } from "@/lib/domain/player";
 import { POSITION_GROUP, isPosition, type PositionGroup } from "@/lib/domain/position";
+import InjuryBadge from "./InjuryBadge";
 
 /** Classic formation-editor coloring: the marker's color is the line being played, not how well-suited the player is to it. */
 export const POSITION_GROUP_STYLES: Record<PositionGroup, string> = {
@@ -35,7 +36,10 @@ export default function PlayerChip({
       <div
         className={`flex items-center gap-2 rounded-full border border-black/15 bg-white px-3 py-1.5 text-xs font-medium text-black/80 shadow-sm dark:border-white/15 dark:bg-white/10 dark:text-white/80 ${dragging ? "shadow-lg" : ""}`}
       >
-        <span className="max-w-28 truncate">{player.name}</span>
+        <span className="flex max-w-28 min-w-0 items-center gap-1">
+          <span className="truncate">{player.name}</span>
+          <InjuryBadge status={player.injuryStatus} className="shrink-0" />
+        </span>
         <span className="opacity-60">{positionLabel}</span>
       </div>
     );
@@ -54,8 +58,9 @@ export default function PlayerChip({
       >
         {positionLabel}
       </div>
-      <span className="max-w-20 truncate text-center text-[11px] font-medium text-white drop-shadow">
-        {player.name.split(" ")[0]}
+      <span className="flex max-w-20 items-center justify-center gap-0.5 text-[11px] font-medium text-white drop-shadow">
+        <span className="truncate">{player.name.split(" ")[0]}</span>
+        <InjuryBadge status={player.injuryStatus} className="shrink-0" />
       </span>
     </div>
   );

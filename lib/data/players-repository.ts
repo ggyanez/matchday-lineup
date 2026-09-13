@@ -12,17 +12,25 @@ function generateId(): string {
 }
 
 /**
- * Upgrades records saved before a player could have more than one primary
- * position (`primaryPosition: Position | null` -> `primaryPositions:
- * Position[]`). Safe to run on already-migrated records — they pass
- * through unchanged.
+ * Upgrades records saved before newer fields existed. Safe to run on
+ * already-migrated records — they pass through unchanged.
+ *  - `primaryPosition: Position | null` -> `primaryPositions: Position[]`
+ *  - missing `preferredFoot` -> `null` (not set)
+ *  - missing `injuryStatus` -> `"healthy"`
  */
-function migratePlayer(raw: Player & { primaryPosition?: string | null }): Player {
-  if (Array.isArray(raw.primaryPositions)) return raw;
+function migratePlayer(
+  raw: Player & { primaryPosition?: string | null }
+): Player {
   const { primaryPosition, ...rest } = raw;
   return {
     ...rest,
-    primaryPositions: primaryPosition ? [primaryPosition as Player["primaryPositions"][number]] : [],
+    primaryPositions: Array.isArray(raw.primaryPositions)
+      ? raw.primaryPositions
+      : primaryPosition
+        ? [primaryPosition as Player["primaryPositions"][number]]
+        : [],
+    preferredFoot: raw.preferredFoot ?? null,
+    injuryStatus: raw.injuryStatus ?? "healthy",
   };
 }
 
@@ -44,6 +52,8 @@ export async function createPlayer(input: PlayerInput): Promise<Player> {
     name: input.name.trim(),
     primaryPositions: input.primaryPositions ?? [],
     secondaryPositions: input.secondaryPositions ?? [],
+    preferredFoot: input.preferredFoot ?? null,
+    injuryStatus: input.injuryStatus ?? "healthy",
     notes: input.notes?.trim() || undefined,
     createdAt: now,
     updatedAt: now,
@@ -68,6 +78,8 @@ export async function updatePlayer(id: string, input: PlayerInput): Promise<Play
         name: input.name.trim(),
         primaryPositions: input.primaryPositions ?? [],
         secondaryPositions: input.secondaryPositions ?? [],
+        preferredFoot: input.preferredFoot ?? null,
+        injuryStatus: input.injuryStatus ?? "healthy",
         notes: input.notes?.trim() || undefined,
         updatedAt: new Date().toISOString(),
       };

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
+import InjuryBadge from "@/components/InjuryBadge";
 import { primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
   POSITION_GROUP,
@@ -260,7 +261,10 @@ export default function MatchDayPage() {
                           checked={confirmed.has(player.id)}
                           onChange={() => toggle(player.id)}
                         />
-                        <span>{player.name}</span>
+                        <span className="flex items-center gap-1">
+                          {player.name}
+                          <InjuryBadge status={player.injuryStatus} />
+                        </span>
                         <span className="text-black/50 dark:text-white/50">
                           ({primaryPositionLabel(player) || "no position"})
                         </span>

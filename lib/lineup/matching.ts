@@ -1,7 +1,7 @@
 import type { Player } from "../domain/player";
 import type { Position } from "../domain/position";
 import { POSITION_GROUP } from "../domain/position";
-import type { Formation, FormationName } from "../domain/formation";
+import type { Formation, FormationName, FormationSlot } from "../domain/formation";
 import { FORMATIONS } from "../domain/formation";
 import { solveAssignment } from "./hungarian";
 
@@ -73,6 +73,51 @@ export function evaluateFit(
 
 export function compatibilityScore(player: Player, position: Position): number {
   return evaluateFit(player, position).score;
+}
+
+/**
+ * How much to knock off a player's score for being injured, so a confirmed
+ * but injured player is only picked over a fit healthy one when there
+ * isn't a healthy alternative — "last resort", not "excluded". A major
+ * injury can drag even a perfect positional fit (3) below a healthy
+ * player's generic same-line fallback (1); a minor knock only softens
+ * their advantage over a healthy player's secondary option.
+ */
+const INJURY_PENALTY: Record<Player["injuryStatus"], number> = {
+  healthy: 0,
+  minor: 1,
+  major: 2.2,
+};
+
+/**
+ * Small nudge (much smaller than any real fit-score gap) that prefers
+ * assigning a left-footed player to the leftmost of several interchangeable
+ * slots sharing the same position code (e.g. the left-sided center back
+ * among three), and a right-footed player to the rightmost. Two-footed
+ * players or slots at the exact center get no nudge either way. This only
+ * ever breaks ties between otherwise-equally-suited slots — it can't
+ * outweigh an actual difference in positional fit.
+ */
+const FOOT_ALIGNMENT_WEIGHT = 0.02;
+
+function footAlignmentBonus(player: Player, slot: FormationSlot): number {
+  if (!player.preferredFoot || player.preferredFoot === "both") return 0;
+  const sideOffset = (slot.x - 50) / 50; // -1 (far left) .. +1 (far right)
+  const bonus = player.preferredFoot === "left" ? -sideOffset : sideOffset;
+  return bonus * FOOT_ALIGNMENT_WEIGHT;
+}
+
+/**
+ * The score used to decide the *automatic* assignment — positional fit,
+ * softened for injuries and nudged for foot/side alignment. Kept separate
+ * from {@link compatibilityScore} (which stays pure positional fit) so the
+ * displayed fit badges and warnings are never confused by these secondary
+ * preferences; only the solver's decision is.
+ */
+function assignmentScore(player: Player, slot: FormationSlot): number {
+  const base = compatibilityScore(player, slot.position);
+  const adjusted = base - INJURY_PENALTY[player.injuryStatus] + footAlignmentBonus(player, slot);
+  return Math.max(0, adjusted);
 }
 
 export interface SlotAssignment {
@@ -161,6 +206,17 @@ export function buildRecommendationFromAssignment(
     );
   }
 
+  const injured = slotAssignments.filter(
+    (s): s is SlotAssignment & { player: Player } => s.player != null && s.player.injuryStatus !== "healthy"
+  );
+  if (injured.length > 0) {
+    warnings.push(
+      `Playing while injured: ` +
+        injured.map((s) => `${s.player.name} (${s.player.injuryStatus})`).join(", ") +
+        "."
+    );
+  }
+
   return {
     formation: formation.name,
     description: formation.description,
@@ -199,7 +255,7 @@ export function assignFormation(
       const isRealSlot = i < slots.length;
       const isRealPlayer = j < players.length;
       if (isRealSlot && isRealPlayer) {
-        const score = compatibilityScore(players[j], slots[i].position);
+        const score = assignmentScore(players[j], slots[i]);
         row.push(FIT_SCORE.PRIMARY_BEST - score); // convert to cost (lower is better)
       } else {
         row.push(DUMMY_COST);

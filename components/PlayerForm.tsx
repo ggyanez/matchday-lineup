@@ -2,8 +2,18 @@
 
 import { useState } from "react";
 import { POSITIONS, POSITION_LABELS, type Position } from "@/lib/domain/position";
-import type { Player, PlayerInput } from "@/lib/domain/player";
+import {
+  INJURY_STATUSES,
+  INJURY_STATUS_LABELS,
+  PREFERRED_FEET,
+  PREFERRED_FOOT_LABELS,
+  type InjuryStatus,
+  type Player,
+  type PlayerInput,
+  type PreferredFoot,
+} from "@/lib/domain/player";
 import PositionTooltip from "./PositionTooltip";
+import InjuryBadge from "./InjuryBadge";
 
 interface PlayerFormProps {
   initial?: Player | null;
@@ -118,6 +128,10 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
   const [secondaryPositions, setSecondaryPositions] = useState<Position[]>(
     initial?.secondaryPositions ?? []
   );
+  const [preferredFoot, setPreferredFoot] = useState<PreferredFoot | null>(
+    initial?.preferredFoot ?? null
+  );
+  const [injuryStatus, setInjuryStatus] = useState<InjuryStatus>(initial?.injuryStatus ?? "healthy");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +163,8 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
         name: name.trim(),
         primaryPositions,
         secondaryPositions,
+        preferredFoot,
+        injuryStatus,
         notes: notes.trim() || undefined,
       });
     } catch {
@@ -192,6 +208,63 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
         onToggle={toggleSecondary}
         onMove={(i, dir) => setSecondaryPositions((current) => moveInList(current, i, dir))}
       />
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <fieldset>
+          <legend className="text-sm">Preferred foot</legend>
+          <p className="mt-1 text-xs text-black/50 dark:text-white/50">
+            Used to prefer the more strongly-sided slot among interchangeable ones (e.g. a
+            left-sided center back among three).
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {PREFERRED_FEET.map((foot) => {
+              const active = preferredFoot === foot;
+              return (
+                <button
+                  key={foot}
+                  type="button"
+                  onClick={() => setPreferredFoot(active ? null : foot)}
+                  className={`rounded-full border px-3 py-1 text-xs transition ${
+                    active
+                      ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                      : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                  }`}
+                >
+                  {PREFERRED_FOOT_LABELS[foot]}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="text-sm">Injury status</legend>
+          <p className="mt-1 text-xs text-black/50 dark:text-white/50">
+            An injured player can still be confirmed for a match, but the recommendation
+            treats them as a last resort.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {INJURY_STATUSES.map((status) => {
+              const active = injuryStatus === status;
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setInjuryStatus(status)}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
+                    active
+                      ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                      : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                  }`}
+                >
+                  <InjuryBadge status={status} />
+                  {INJURY_STATUS_LABELS[status]}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      </div>
 
       <label className="mt-4 flex flex-col gap-1 text-sm">
         Notes (optional)
