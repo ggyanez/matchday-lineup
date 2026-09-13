@@ -4,10 +4,13 @@ import { useState } from "react";
 import { getPositionCode, getPositionName, POSITIONS, type Position } from "@/lib/domain/position";
 import {
   getInjuryStatusLabel,
+  getMembershipStatusLabel,
   getPreferredFootLabel,
   INJURY_STATUSES,
+  MEMBERSHIP_STATUSES,
   PREFERRED_FEET,
   type InjuryStatus,
+  type MembershipStatus,
   type Player,
   type PlayerInput,
   type PreferredFoot,
@@ -139,6 +142,9 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
     initial?.preferredFoot ?? null
   );
   const [injuryStatus, setInjuryStatus] = useState<InjuryStatus>(initial?.injuryStatus ?? "healthy");
+  const [membershipStatus, setMembershipStatus] = useState<MembershipStatus>(
+    initial?.membershipStatus ?? "regular"
+  );
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -172,6 +178,7 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
         secondaryPositions,
         preferredFoot,
         injuryStatus,
+        membershipStatus,
         notes: notes.trim() || undefined,
       });
     } catch {
@@ -213,6 +220,30 @@ export default function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormPr
         onToggle={toggleSecondary}
         onMove={(i, dir) => setSecondaryPositions((current) => moveInList(current, i, dir))}
       />
+
+      <fieldset className="mt-4">
+        <legend className="text-sm">{t("form.membershipLegend")}</legend>
+        <p className="mt-1 text-xs text-black/50 dark:text-white/50">{t("form.membershipHint")}</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {MEMBERSHIP_STATUSES.map((status) => {
+            const active = membershipStatus === status;
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setMembershipStatus(status)}
+                className={`rounded-full border px-3 py-1 text-xs transition ${
+                  active
+                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                    : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                }`}
+              >
+                {getMembershipStatusLabel(status, locale)}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <fieldset>

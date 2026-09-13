@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     secondaryPositions: body.secondaryPositions ?? [],
     preferredFoot: body.preferredFoot ?? null,
     injuryStatus: body.injuryStatus ?? "healthy",
+    membershipStatus: body.membershipStatus ?? "regular",
     notes: body.notes,
   });
 

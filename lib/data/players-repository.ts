@@ -17,6 +17,8 @@ function generateId(): string {
  *  - `primaryPosition: Position | null` -> `primaryPositions: Position[]`
  *  - missing `preferredFoot` -> `null` (not set)
  *  - missing `injuryStatus` -> `"healthy"`
+ *  - missing `membershipStatus` -> `"regular"` (every player recorded
+ *    before this field existed was, in practice, an established regular)
  */
 function migratePlayer(
   raw: Player & { primaryPosition?: string | null }
@@ -31,6 +33,7 @@ function migratePlayer(
         : [],
     preferredFoot: raw.preferredFoot ?? null,
     injuryStatus: raw.injuryStatus ?? "healthy",
+    membershipStatus: raw.membershipStatus ?? "regular",
   };
 }
 
@@ -54,6 +57,7 @@ export async function createPlayer(input: PlayerInput): Promise<Player> {
     secondaryPositions: input.secondaryPositions ?? [],
     preferredFoot: input.preferredFoot ?? null,
     injuryStatus: input.injuryStatus ?? "healthy",
+    membershipStatus: input.membershipStatus ?? "regular",
     notes: input.notes?.trim() || undefined,
     createdAt: now,
     updatedAt: now,
@@ -80,6 +84,7 @@ export async function updatePlayer(id: string, input: PlayerInput): Promise<Play
         secondaryPositions: input.secondaryPositions ?? [],
         preferredFoot: input.preferredFoot ?? null,
         injuryStatus: input.injuryStatus ?? "healthy",
+        membershipStatus: input.membershipStatus ?? "regular",
         notes: input.notes?.trim() || undefined,
         updatedAt: new Date().toISOString(),
       };

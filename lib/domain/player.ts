@@ -41,6 +41,24 @@ export function getInjuryStatusLabel(status: InjuryStatus, locale: Locale): stri
   return INJURY_STATUS_LABEL_BY_LOCALE[locale][status];
 }
 
+export const MEMBERSHIP_STATUSES = ["regular", "guest"] as const;
+export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
+
+const MEMBERSHIP_STATUS_LABEL_BY_LOCALE: Record<Locale, Record<MembershipStatus, string>> = {
+  es: {
+    regular: "Fijo",
+    guest: "Invitado",
+  },
+  en: {
+    regular: "Regular",
+    guest: "Guest",
+  },
+};
+
+export function getMembershipStatusLabel(status: MembershipStatus, locale: Locale): string {
+  return MEMBERSHIP_STATUS_LABEL_BY_LOCALE[locale][status];
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -66,6 +84,16 @@ export interface Player {
    * picking them over a fit healthy alternative when there isn't one.
    */
   injuryStatus: InjuryStatus;
+  /**
+   * Whether this player is an established regular ("fijo" — always turns
+   * out) or a guest brought in occasionally / for the first time
+   * ("invitado"). Being a regular carries a large weight in the
+   * recommendation — see `MEMBERSHIP_BONUS` in `lib/lineup/matching.ts` —
+   * so a guest only takes a slot a regular would otherwise fill when
+   * there's no fit regular alternative, similar in spirit to how an
+   * injury is treated as a last resort.
+   */
+  membershipStatus: MembershipStatus;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -78,6 +106,7 @@ export type PlayerInput = Pick<
   | "secondaryPositions"
   | "preferredFoot"
   | "injuryStatus"
+  | "membershipStatus"
   | "notes"
 >;
 
@@ -92,6 +121,12 @@ export function isValidPlayerInput(input: Partial<PlayerInput>): input is Player
     return false;
   }
   if (input.injuryStatus != null && !(INJURY_STATUSES as readonly string[]).includes(input.injuryStatus)) {
+    return false;
+  }
+  if (
+    input.membershipStatus != null &&
+    !(MEMBERSHIP_STATUSES as readonly string[]).includes(input.membershipStatus)
+  ) {
     return false;
   }
   return true;

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
 import PositionTooltip from "@/components/PositionTooltip";
 import InjuryBadge from "@/components/InjuryBadge";
-import { getPreferredFootLabel, type Player, type PlayerInput } from "@/lib/domain/player";
+import { getMembershipStatusLabel, getPreferredFootLabel, type Player, type PlayerInput } from "@/lib/domain/player";
 import { getPositionCode, type Position } from "@/lib/domain/position";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 import { formatRemoveConfirm } from "@/lib/i18n/translations";
@@ -131,6 +131,11 @@ export default function PlayersPage() {
                   <p className="flex items-center gap-1.5 font-medium">
                     {player.name}
                     <InjuryBadge status={player.injuryStatus} />
+                    {player.membershipStatus === "guest" && (
+                      <span className="rounded-full border border-amber-500/50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                        {getMembershipStatusLabel("guest", locale)}
+                      </span>
+                    )}
                   </p>
                   <p className="text-sm text-black/60 dark:text-white/60">
                     {player.primaryPositions.length > 0 ? (

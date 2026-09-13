@@ -48,6 +48,9 @@ const STRINGS = {
     "form.injuryLegend": "Estado físico",
     "form.injuryHint":
       "Un jugador lesionado igual puede confirmarse para un partido, pero la recomendación lo deja como última opción.",
+    "form.membershipLegend": "Fijo o invitado",
+    "form.membershipHint":
+      "Un jugador fijo pesa muchísimo más que uno invitado a la hora de armar la alineación — un invitado solo ocupa un puesto cuando no hay un fijo que lo cubra igual de bien.",
     "form.notesLabel": "Notas (opcional)",
     "form.nameRequired": "El nombre es obligatorio.",
     "form.saveError": "Hubo un problema al guardar el jugador. Probá de nuevo.",
@@ -128,6 +131,9 @@ const STRINGS = {
     "form.injuryLegend": "Injury status",
     "form.injuryHint":
       "An injured player can still be confirmed for a match, but the recommendation treats them as a last resort.",
+    "form.membershipLegend": "Regular or guest",
+    "form.membershipHint":
+      "A regular player weighs far more than a guest when building the lineup — a guest only takes a slot when there isn't a regular who covers it just as well.",
     "form.notesLabel": "Notes (optional)",
     "form.nameRequired": "Name is required.",
     "form.saveError": "Something went wrong saving this player. Please try again.",

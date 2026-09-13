@@ -21,6 +21,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       secondaryPositions: body.secondaryPositions ?? [],
       preferredFoot: body.preferredFoot ?? null,
       injuryStatus: body.injuryStatus ?? "healthy",
+      membershipStatus: body.membershipStatus ?? "regular",
       notes: body.notes,
     });
     return NextResponse.json({ player });

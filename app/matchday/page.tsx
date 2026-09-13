@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
 import InjuryBadge from "@/components/InjuryBadge";
-import { primaryPositionLabel, type Player } from "@/lib/domain/player";
+import { getMembershipStatusLabel, primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
   getPositionGroupLabel,
   POSITION_GROUP,
@@ -47,6 +47,7 @@ function lineupRelevantFingerprint(player: Player): string {
     player.secondaryPositions,
     player.preferredFoot,
     player.injuryStatus,
+    player.membershipStatus,
   ]);
 }
 
@@ -302,6 +303,11 @@ export default function MatchDayPage() {
                         <span className="flex items-center gap-1">
                           {player.name}
                           <InjuryBadge status={player.injuryStatus} />
+                          {player.membershipStatus === "guest" && (
+                            <span className="rounded-full border border-amber-500/50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                              {getMembershipStatusLabel("guest", locale)}
+                            </span>
+                          )}
                         </span>
                         <span className="text-black/50 dark:text-white/50">
                           ({primaryPositionLabel(player, locale) || t("matchday.noPositionInline")})

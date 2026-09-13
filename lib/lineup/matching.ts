@@ -77,19 +77,36 @@ export function compatibilityScore(player: Player, position: Position): number {
 }
 
 /**
+ * Bonus for an established regular ("fijo") over a guest ("invitado"), so
+ * the recommendation prefers regulars by a wide margin — a guest only
+ * takes a slot when there isn't a comparably-fit regular for it. Set well
+ * above the biggest realistic fit gap (a first-listed primary position, 3,
+ * versus any listed secondary position, floor 1.2 — a gap of 1.8), so a
+ * regular is preferred even in their weaker, secondary position over a
+ * guest who's a natural fit for the slot.
+ */
+const MEMBERSHIP_BONUS: Record<Player["membershipStatus"], number> = {
+  regular: 2,
+  guest: 0,
+};
+
+/**
  * How much to knock off a player's score for being injured, so a confirmed
  * but injured player is only picked over a fit healthy one when there
- * isn't a healthy alternative — "last resort", not "excluded". Even a
- * minor knock drops a player's best possible score (a first-listed
- * primary position, 3) below any healthy player's secondary-position
- * score (at most 2, floor 1.2) — playing hurt in your best position still
- * loses to a healthy teammate filling in from a secondary one. A major
- * injury goes further, dropping below even a healthy same-line fallback (1).
+ * isn't a healthy alternative — "last resort", not "excluded". Health
+ * still matters more than being a regular: these penalties are set above
+ * the combined regular bonus and fit range (best case for an injured
+ * regular: primary position, 3, plus the regular bonus, 2, totaling 5)
+ * versus any healthy player's secondary-position score (at most 2, floor
+ * 1.2, with no bonus if they're a guest) — playing hurt, even as a
+ * regular in your best position, still loses to a healthy guest filling
+ * in from a secondary one. A major injury goes further, dropping below
+ * even a healthy same-line fallback (1).
  */
 const INJURY_PENALTY: Record<Player["injuryStatus"], number> = {
   healthy: 0,
-  minor: 1.9,
-  major: 2.5,
+  minor: 4,
+  major: 4.6,
 };
 
 /**
@@ -119,7 +136,11 @@ function footAlignmentBonus(player: Player, slot: FormationSlot): number {
  */
 function assignmentScore(player: Player, slot: FormationSlot): number {
   const base = compatibilityScore(player, slot.position);
-  const adjusted = base - INJURY_PENALTY[player.injuryStatus] + footAlignmentBonus(player, slot);
+  const adjusted =
+    base +
+    MEMBERSHIP_BONUS[player.membershipStatus] -
+    INJURY_PENALTY[player.injuryStatus] +
+    footAlignmentBonus(player, slot);
   return Math.max(0, adjusted);
 }
 
@@ -159,6 +180,7 @@ const WARNING_TEXT = {
     outOfPosition: (count: number, list: string) =>
       `${count} jugador(es) están fuera de su posición habitual: ${list}.`,
     playingInjured: (list: string) => `Jugando lesionado: ${list}.`,
+    playingAsGuest: (list: string) => `Jugando como invitado: ${list}.`,
     at: (name: string, code: string) => `${name} de ${code}`,
   },
   en: {
@@ -168,6 +190,7 @@ const WARNING_TEXT = {
     outOfPosition: (count: number, list: string) =>
       `${count} player(s) are out of their usual positions: ${list}.`,
     playingInjured: (list: string) => `Playing while injured: ${list}.`,
+    playingAsGuest: (list: string) => `Playing as a guest: ${list}.`,
     at: (name: string, code: string) => `${name} at ${code}`,
   },
 } as const;
@@ -242,6 +265,14 @@ export function buildRecommendationFromAssignment(
       .map((s) => `${s.player.name} (${INJURY_WORD[locale][s.player.injuryStatus as "minor" | "major"]})`)
       .join(", ");
     warnings.push(text.playingInjured(list));
+  }
+
+  const guests = slotAssignments.filter(
+    (s): s is SlotAssignment & { player: Player } =>
+      s.player != null && s.player.membershipStatus === "guest"
+  );
+  if (guests.length > 0) {
+    warnings.push(text.playingAsGuest(guests.map((s) => s.player.name).join(", ")));
   }
 
   return {
