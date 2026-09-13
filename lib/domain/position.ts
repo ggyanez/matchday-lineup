@@ -73,6 +73,25 @@ export function isPosition(value: string): value is Position {
   return (POSITIONS as readonly string[]).includes(value);
 }
 
+/** One-sentence, plain-language explanation of what each position actually does. */
+export const POSITION_DESCRIPTIONS: Record<Position, string> = {
+  ARQ: "The last line of defense — the only player allowed to use their hands, and only inside the penalty area.",
+  DFC: "Marks the middle of the defense, breaking up attacks and winning aerial duels near their own goal.",
+  LI: "Defends the left flank, tracking opposing wingers and supporting attacks down that side.",
+  LD: "Defends the right flank, tracking opposing wingers and supporting attacks down that side.",
+  CAI: "A left back who pushes further forward, providing width in both defense and attack.",
+  CAD: "A right back who pushes further forward, providing width in both defense and attack.",
+  MCD: "Sits in front of the defense, breaking up opposition attacks and shielding the back line.",
+  MC: "Links defense and attack through the middle, involved in both winning the ball and building play.",
+  MDI: "Covers the left side of midfield, contributing to both defense and attack down that flank.",
+  MDD: "Covers the right side of midfield, contributing to both defense and attack down that flank.",
+  MCO: "Plays just behind the strikers, creating chances and linking midfield to attack.",
+  EXI: "An attacker who hugs the left touchline, using pace and dribbling to beat defenders and create chances.",
+  EXD: "An attacker who hugs the right touchline, using pace and dribbling to beat defenders and create chances.",
+  SD: "Plays just behind the main striker, dropping deep to link play while still threatening the goal.",
+  DC: "The furthest player forward, focused on scoring goals and leading the attack.",
+};
+
 /** Display order and labels for grouping players by their line. */
 export const POSITION_GROUP_ORDER: PositionGroup[] = [
   "goalkeeper",

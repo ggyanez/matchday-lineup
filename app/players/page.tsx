@@ -2,13 +2,33 @@
 
 import { useEffect, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
-import { primaryPositionLabel, type Player, type PlayerInput } from "@/lib/domain/player";
+import PositionTooltip from "@/components/PositionTooltip";
+import type { Player, PlayerInput } from "@/lib/domain/player";
+import type { Position } from "@/lib/domain/position";
 import {
   createPlayerRequest,
   deletePlayerRequest,
   fetchPlayers,
   updatePlayerRequest,
 } from "@/lib/api-client";
+
+/** Renders a "ARQ/DFC"-style list where each code has its own hover tooltip. */
+function PositionBadgeList({ positions }: { positions: Position[] }) {
+  return (
+    <>
+      {positions.map((position, i) => (
+        <span key={position}>
+          <PositionTooltip position={position}>
+            <span className="cursor-help underline decoration-dotted decoration-black/30 underline-offset-2 dark:decoration-white/30">
+              {position}
+            </span>
+          </PositionTooltip>
+          {i < positions.length - 1 && "/"}
+        </span>
+      ))}
+    </>
+  );
+}
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -100,13 +120,19 @@ export default function PlayersPage() {
                 <div>
                   <p className="font-medium">{player.name}</p>
                   <p className="text-sm text-black/60 dark:text-white/60">
-                    {primaryPositionLabel(player) || (
+                    {player.primaryPositions.length > 0 ? (
+                      <PositionBadgeList positions={player.primaryPositions} />
+                    ) : (
                       <span className="italic text-amber-600 dark:text-amber-400">
                         No position set
                       </span>
                     )}
-                    {player.secondaryPositions.length > 0 &&
-                      ` · also: ${player.secondaryPositions.join(", ")}`}
+                    {player.secondaryPositions.length > 0 && (
+                      <>
+                        {" · also: "}
+                        <PositionBadgeList positions={player.secondaryPositions} />
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="flex gap-3 text-sm">

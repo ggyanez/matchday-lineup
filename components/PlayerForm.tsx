@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { POSITIONS, POSITION_LABELS, type Position } from "@/lib/domain/position";
 import type { Player, PlayerInput } from "@/lib/domain/player";
+import PositionTooltip from "./PositionTooltip";
 
 interface PlayerFormProps {
   initial?: Player | null;
@@ -37,18 +38,19 @@ function PositionOrderPicker({
         {POSITIONS.filter((p) => !excluded.includes(p)).map((p) => {
           const active = selected.includes(p);
           return (
-            <button
-              key={p}
-              type="button"
-              onClick={() => onToggle(p)}
-              className={`rounded-full border px-3 py-1 text-xs transition ${
-                active
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
-              }`}
-            >
-              {p}
-            </button>
+            <PositionTooltip key={p} position={p}>
+              <button
+                type="button"
+                onClick={() => onToggle(p)}
+                className={`rounded-full border px-3 py-1 text-xs transition ${
+                  active
+                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                    : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                }`}
+              >
+                {p}
+              </button>
+            </PositionTooltip>
           );
         })}
       </div>
@@ -61,9 +63,11 @@ function PositionOrderPicker({
               className="flex items-center gap-2 rounded border border-black/10 px-2 py-1 text-sm dark:border-white/10"
             >
               <span className="w-4 text-black/40 dark:text-white/40">{i + 1}.</span>
-              <span className="flex-1">
-                {p} — {POSITION_LABELS[p]}
-              </span>
+              <PositionTooltip position={p} className="flex-1 cursor-help">
+                <span>
+                  {p} — {POSITION_LABELS[p]}
+                </span>
+              </PositionTooltip>
               <button
                 type="button"
                 onClick={() => onMove(i, -1)}
