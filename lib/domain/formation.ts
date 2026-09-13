@@ -329,11 +329,11 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-3-2",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
-      { id: "CAI", position: "CAI", x: 10, y: 25 },
+      { id: "LI", position: "LI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
       { id: "DFC-2", position: "DFC", x: 50, y: 24 },
       { id: "DFC-3", position: "DFC", x: 70, y: 27 },
-      { id: "CAD", position: "CAD", x: 90, y: 25 },
+      { id: "LD", position: "LD", x: 90, y: 25 },
       { id: "MC-1", position: "MC", x: 30, y: 48 },
       { id: "MC-2", position: "MC", x: 50, y: 45 },
       { id: "MC-3", position: "MC", x: 70, y: 48 },
@@ -345,11 +345,11 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-4-1",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
-      { id: "CAI", position: "CAI", x: 10, y: 25 },
+      { id: "LI", position: "LI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
       { id: "DFC-2", position: "DFC", x: 50, y: 24 },
       { id: "DFC-3", position: "DFC", x: 70, y: 27 },
-      { id: "CAD", position: "CAD", x: 90, y: 25 },
+      { id: "LD", position: "LD", x: 90, y: 25 },
       { id: "MDI", position: "MDI", x: 15, y: 50 },
       { id: "MC-1", position: "MC", x: 38, y: 48 },
       { id: "MC-2", position: "MC", x: 62, y: 48 },
@@ -361,11 +361,11 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-2-2-1",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
-      { id: "CAI", position: "CAI", x: 10, y: 25 },
+      { id: "LI", position: "LI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
       { id: "DFC-2", position: "DFC", x: 50, y: 24 },
       { id: "DFC-3", position: "DFC", x: 70, y: 27 },
-      { id: "CAD", position: "CAD", x: 90, y: 25 },
+      { id: "LD", position: "LD", x: 90, y: 25 },
       { id: "MCD-1", position: "MCD", x: 35, y: 42 },
       { id: "MCD-2", position: "MCD", x: 65, y: 42 },
       { id: "MCO-1", position: "MCO", x: 35, y: 62 },
@@ -377,11 +377,11 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-2-3",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
-      { id: "CAI", position: "CAI", x: 10, y: 25 },
+      { id: "LI", position: "LI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 27 },
       { id: "DFC-2", position: "DFC", x: 50, y: 24 },
       { id: "DFC-3", position: "DFC", x: 70, y: 27 },
-      { id: "CAD", position: "CAD", x: 90, y: 25 },
+      { id: "LD", position: "LD", x: 90, y: 25 },
       { id: "MC-1", position: "MC", x: 38, y: 48 },
       { id: "MC-2", position: "MC", x: 62, y: 48 },
       { id: "EXI", position: "EXI", x: 20, y: 82 },
@@ -420,7 +420,7 @@ const FORMATION_DESCRIPTION_BY_LOCALE: Record<Locale, Record<FormationName, stri
     "5-3-2": "Línea de cinco para una defensa sólida, dos delanteros directos arriba.",
     "5-4-1": "Línea de cinco, una línea de cuatro por delante, y un solo delantero de área.",
     "5-2-2-1": "Línea de cinco sólida y doble cinco, con dos enganches detrás de un delantero.",
-    "5-2-3": "Los carrileros se quedan atrás en la línea de cinco, mientras el ancho llega por los extremos adelantados.",
+    "5-2-3": "Los laterales completan la línea de cinco, mientras el ancho llega por los extremos adelantados.",
   },
   en: {
     "4-4-2": "Balanced, two banks of four behind a strike partnership.",
@@ -443,7 +443,7 @@ const FORMATION_DESCRIPTION_BY_LOCALE: Record<Locale, Record<FormationName, stri
     "5-3-2": "Five at the back for a settled defense, direct two up top.",
     "5-4-1": "Five at the back, a flat four ahead of them, and one out-and-out striker.",
     "5-2-2-1": "A settled back five and double pivot, with two attacking mids behind one striker.",
-    "5-2-3": "Wing backs sit in a back five while width up front comes from advanced wingers.",
+    "5-2-3": "Fullbacks complete the back five, while width up front comes from advanced wingers.",
   },
 };
 
@@ -461,12 +461,8 @@ export interface FormationLineCounts {
 /**
  * Reads the line sizes straight from the formation's own name (e.g.
  * "3-5-2" -> 3 defenders, 5 midfielders, 2 forwards), rather than from the
- * position codes on its slots. That matters for wing-back slots (CAI/CAD):
- * they're grouped with the back line for scoring purposes (see
- * `POSITION_GROUP`), but conventionally count toward the *midfield* number
- * in a back-three shape like "3-5-2" and toward the *defense* number in a
- * back-five shape like "5-3-2" — a distinction only the name captures.
- * A trailing qualifier like " diamond" is ignored.
+ * position codes on its slots — simpler, and it's already exactly what
+ * the name encodes. A trailing qualifier like " diamond" is ignored.
  */
 export function getLineCounts(formation: Formation): FormationLineCounts {
   const numbers = formation.name.split(" ")[0].split("-").map(Number);

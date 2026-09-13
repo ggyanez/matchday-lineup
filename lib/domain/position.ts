@@ -44,12 +44,11 @@ export const POSITION_GROUP: Record<Position, PositionGroup> = {
   DFC: "defense",
   LI: "defense",
   LD: "defense",
-  // Wing backs are genuinely ambiguous — part of the back line in a 5-at-the-back
-  // system, but functionally more like wide midfielders in a back three (which is
-  // the more common reading of "carrilero"). Grouped as midfield: it makes for a
-  // more sensible same-line fallback (a central midfielder deputizing out wide
-  // beats a central back doing the same) and matches how most coaches would
-  // categorize this player when scanning a squad list.
+  // Wing backs ("carrileros") are a midfield role, not a back-line one —
+  // in every formation that uses them (a back three), they line up ahead
+  // of the center backs, providing width the way a wide midfielder would.
+  // A flat back four or back five uses fullbacks (LI/LD) instead, even
+  // when it sits as the wide slots of a five-man defensive line.
   CAI: "midfield",
   CAD: "midfield",
   MCD: "midfield",
