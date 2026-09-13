@@ -5,7 +5,7 @@ import PlayerForm from "@/components/PlayerForm";
 import PositionTooltip from "@/components/PositionTooltip";
 import InjuryBadge from "@/components/InjuryBadge";
 import { getMembershipStatusLabel, getPreferredFootLabel, type Player, type PlayerInput } from "@/lib/domain/player";
-import { getPositionCode, POSITIONS, type Position } from "@/lib/domain/position";
+import { getPositionCode, POSITION_GROUP, POSITIONS, type Position, type PositionGroup } from "@/lib/domain/position";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 import { formatRemoveConfirm } from "@/lib/i18n/translations";
 import {
@@ -45,6 +45,19 @@ function positionSortKey(player: Player): number {
   return index === -1 ? POSITIONS.length : index;
 }
 
+/** A player's overall "line", based on their first-listed primary
+ * position — the same rule used for sorting and for grouping on the
+ * Match Day page, so a player filed under "defense" here is the same
+ * one you'd see under "Defenders" there. */
+function positionGroupOf(player: Player): PositionGroup | "none" {
+  const primary = player.primaryPositions[0];
+  return primary ? POSITION_GROUP[primary] : "none";
+}
+
+type MembershipFilter = "all" | "regular" | "guest";
+type HealthFilter = "all" | "healthy" | "injured";
+type PositionFilter = "all" | PositionGroup | "none";
+
 export default function PlayersPage() {
   const { locale, t } = useLocale();
   const [players, setPlayers] = useState<Player[]>([]);
@@ -52,18 +65,43 @@ export default function PlayersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Player | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("name");
+  const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>("all");
+  const [healthFilter, setHealthFilter] = useState<HealthFilter>("all");
+  const [positionFilter, setPositionFilter] = useState<PositionFilter>("all");
   const formRef = useRef<HTMLDivElement>(null);
+
+  const filtersActive =
+    membershipFilter !== "all" || healthFilter !== "all" || positionFilter !== "all";
+
+  function resetFilters() {
+    setMembershipFilter("all");
+    setHealthFilter("all");
+    setPositionFilter("all");
+  }
+
+  // The three filters are independent facets, combined with AND — e.g.
+  // "Solo Invitados" plus "Solo Defensores" together shows only guest
+  // defenders. Clicking an already-active chip clears just that facet.
+  const filteredPlayers = useMemo(() => {
+    return players.filter((player) => {
+      if (membershipFilter !== "all" && player.membershipStatus !== membershipFilter) return false;
+      if (healthFilter === "healthy" && player.injuryStatus !== "healthy") return false;
+      if (healthFilter === "injured" && player.injuryStatus === "healthy") return false;
+      if (positionFilter !== "all" && positionGroupOf(player) !== positionFilter) return false;
+      return true;
+    });
+  }, [players, membershipFilter, healthFilter, positionFilter]);
 
   // The server already returns players sorted by name, but the sort mode
   // is purely a display concern — position order is computed here so
   // switching it doesn't need a round-trip.
   const sortedPlayers = useMemo(() => {
-    if (sortMode === "name") return players;
-    return [...players].sort((a, b) => {
+    if (sortMode === "name") return filteredPlayers;
+    return [...filteredPlayers].sort((a, b) => {
       const byPosition = positionSortKey(a) - positionSortKey(b);
       return byPosition !== 0 ? byPosition : a.name.localeCompare(b.name);
     });
-  }, [players, sortMode]);
+  }, [filteredPlayers, sortMode]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -162,11 +200,58 @@ export default function PlayersPage() {
         </div>
       )}
 
+      {!loading && players.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-black/70 dark:text-white/70">
+          {t("players.filterBy")}
+          <button
+            type="button"
+            onClick={resetFilters}
+            aria-pressed={!filtersActive}
+            className={`rounded-full border px-3 py-1 text-xs transition ${
+              !filtersActive
+                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+            }`}
+          >
+            {t("players.filterAll")}
+          </button>
+          {(
+            [
+              { value: "regular", label: t("players.filterRegularOnly"), active: membershipFilter === "regular", onClick: () => setMembershipFilter((c) => (c === "regular" ? "all" : "regular")) },
+              { value: "guest", label: t("players.filterGuestOnly"), active: membershipFilter === "guest", onClick: () => setMembershipFilter((c) => (c === "guest" ? "all" : "guest")) },
+              { value: "healthy", label: t("players.filterHealthyOnly"), active: healthFilter === "healthy", onClick: () => setHealthFilter((c) => (c === "healthy" ? "all" : "healthy")) },
+              { value: "injured", label: t("players.filterInjuredOnly"), active: healthFilter === "injured", onClick: () => setHealthFilter((c) => (c === "injured" ? "all" : "injured")) },
+              { value: "goalkeeper", label: t("players.filterGoalkeepersOnly"), active: positionFilter === "goalkeeper", onClick: () => setPositionFilter((c) => (c === "goalkeeper" ? "all" : "goalkeeper")) },
+              { value: "defense", label: t("players.filterDefendersOnly"), active: positionFilter === "defense", onClick: () => setPositionFilter((c) => (c === "defense" ? "all" : "defense")) },
+              { value: "midfield", label: t("players.filterMidfieldersOnly"), active: positionFilter === "midfield", onClick: () => setPositionFilter((c) => (c === "midfield" ? "all" : "midfield")) },
+              { value: "attack", label: t("players.filterForwardsOnly"), active: positionFilter === "attack", onClick: () => setPositionFilter((c) => (c === "attack" ? "all" : "attack")) },
+              { value: "none", label: t("players.filterNoPositionOnly"), active: positionFilter === "none", onClick: () => setPositionFilter((c) => (c === "none" ? "all" : "none")) },
+            ] as const
+          ).map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              onClick={chip.onClick}
+              aria-pressed={chip.active}
+              className={`rounded-full border px-3 py-1 text-xs transition ${
+                chip.active
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="mt-8">
         {loading ? (
           <p className="text-sm text-black/60 dark:text-white/60">{t("players.loading")}</p>
         ) : players.length === 0 ? (
           <p className="text-sm text-black/60 dark:text-white/60">{t("players.empty")}</p>
+        ) : sortedPlayers.length === 0 ? (
+          <p className="text-sm text-black/60 dark:text-white/60">{t("players.filteredEmpty")}</p>
         ) : (
           <ul className="divide-y divide-black/10 dark:divide-white/10">
             {sortedPlayers.map((player) => (
