@@ -57,7 +57,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-4-2",
     description: "Balanced, two banks of four behind a strike partnership.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -74,7 +74,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-4-2 diamond",
     description: "A narrow central diamond feeds two strikers, trading width for control.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -91,7 +91,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-4-1-1",
     description: "A withdrawn forward links midfield and attack, feeding the striker ahead.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -108,7 +108,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-3-3",
     description: "Width from the wingers, control through a midfield trio.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -125,7 +125,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-2-3-1",
     description: "Double pivot shielding the back four, one out-and-out striker.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -142,7 +142,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-1-4-1",
     description: "A holding midfielder shields the back four, freeing a flat four ahead of them.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -160,7 +160,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     description:
       "The 'Christmas tree' — two withdrawn forwards feed a lone striker in a narrow shape.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -177,7 +177,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-2-2-2",
     description: "The 'magic square' — a double pivot and two attacking mids support two strikers.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -194,7 +194,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-2-4",
     description: "Maximum width and numbers up front, with just two central midfielders behind it.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -212,7 +212,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     description:
       "A defensive midfielder anchors the back four, freeing three attacking mids and two strikers.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -229,7 +229,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "4-5-1",
     description: "Extra body in midfield, a lone striker up top.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 20 },
       { id: "DFC-1", position: "DFC", x: 38, y: 18 },
       { id: "DFC-2", position: "DFC", x: 62, y: 18 },
@@ -246,7 +246,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "3-4-3",
     description: "Three center backs, attacking width from the flanks.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
       { id: "DFC-3", position: "DFC", x: 70, y: 18 },
@@ -263,7 +263,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "3-4-2-1",
     description: "Wing backs provide the width, with two withdrawn forwards feeding a lone striker.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
       { id: "DFC-3", position: "DFC", x: 70, y: 18 },
@@ -280,7 +280,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "3-4-1-2",
     description: "Wing backs and a single playmaker support an orthodox strike partnership.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
       { id: "DFC-3", position: "DFC", x: 70, y: 18 },
@@ -297,7 +297,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "3-5-2",
     description: "Wing backs provide the width, packed midfield, two strikers.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
       { id: "DFC-3", position: "DFC", x: 70, y: 18 },
@@ -314,7 +314,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "3-1-4-2",
     description: "A deep-lying midfielder shields the back three, freeing a busy four and two strikers.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
       { id: "DFC-3", position: "DFC", x: 70, y: 18 },
@@ -331,7 +331,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "3-5-1-1",
     description: "Wing backs and a five-man midfield support a withdrawn forward playing off a striker.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
       { id: "DFC-3", position: "DFC", x: 70, y: 18 },
@@ -348,7 +348,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-3-2",
     description: "Five at the back for a settled defense, direct two up top.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
@@ -365,7 +365,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-4-1",
     description: "Five at the back, a flat four ahead of them, and one out-and-out striker.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
@@ -382,7 +382,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-2-2-1",
     description: "A settled back five and double pivot, with two attacking mids behind one striker.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },
@@ -399,7 +399,7 @@ export const FORMATIONS: Record<FormationName, Formation> = {
     name: "5-2-3",
     description: "Wing backs sit in a back five while width up front comes from advanced wingers.",
     slots: [
-      { id: "ARQ", position: "ARQ", x: 50, y: 5 },
+      { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "CAI", position: "CAI", x: 10, y: 25 },
       { id: "DFC-1", position: "DFC", x: 30, y: 18 },
       { id: "DFC-2", position: "DFC", x: 50, y: 15 },

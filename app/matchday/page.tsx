@@ -297,7 +297,7 @@ export default function MatchDayPage() {
             onClick={handleForceFormation}
             disabled={confirmed.size === 0 || generating}
             title="Fill this exact formation with the best assignment of confirmed players"
-            className="rounded border border-black/20 px-3 py-1 text-sm disabled:opacity-50 dark:border-white/20"
+            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
           >
             {generating ? "Assigning..." : `Force ${activeFormationName}`}
           </button>
