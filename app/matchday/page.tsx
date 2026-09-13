@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
 import { primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/lib/api-client";
 import { buildRecommendationFromAssignment, type SlotAssignment } from "@/lib/lineup/matching";
 import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
+import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
 
 function assignmentsFromSlots(slots: SlotAssignment[]): SlotAssignments {
   return Object.fromEntries(slots.map((s) => [s.slotId, s.player?.id ?? null]));
@@ -48,18 +49,36 @@ export default function MatchDayPage() {
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
 
-  useEffect(() => {
+  const loadPlayers = useCallback(() => {
     fetchPlayers().then(({ players }) => {
       setPlayers(players);
       setLoading(false);
     });
   }, []);
 
-  useEffect(() => {
+  const loadFavoriteFormations = useCallback(() => {
     fetchFavoriteFormations().then(({ formations }) => {
       setFavoriteFormations(new Set(formations));
     });
   }, []);
+
+  useEffect(() => {
+    loadPlayers();
+  }, [loadPlayers]);
+
+  useEffect(() => {
+    loadFavoriteFormations();
+  }, [loadFavoriteFormations]);
+
+  // Covers Next's client Router Cache reusing this page, and the browser's
+  // bfcache restoring it verbatim on back/forward — both can otherwise
+  // leave confirmed players (and their positions) showing stale data after
+  // an edit made on another page.
+  const refetchAll = useCallback(() => {
+    loadPlayers();
+    loadFavoriteFormations();
+  }, [loadPlayers, loadFavoriteFormations]);
+  useRefetchOnFocus(refetchAll);
 
   // Favorited formations (set on the Formations page) come first, each
   // marked with a star; everything else follows in its usual line-size

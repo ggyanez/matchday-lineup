@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FORMATIONS,
   FORMATION_NAMES_BY_LINE_COUNTS,
@@ -8,6 +8,7 @@ import {
   type FormationName,
 } from "@/lib/domain/formation";
 import { fetchFavoriteFormations, saveFavoriteFormations } from "@/lib/api-client";
+import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
 
 export default function FormationsPage() {
   const [favorites, setFavorites] = useState<Set<FormationName>>(new Set());
@@ -15,12 +16,20 @@ export default function FormationsPage() {
   const [saving, setSaving] = useState<FormationName | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetchFavoriteFormations().then(({ formations }) => {
       setFavorites(new Set(formations));
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Covers Next's client Router Cache reusing this page, and the browser's
+  // bfcache restoring it verbatim on back/forward navigation.
+  useRefetchOnFocus(load);
 
   const groups = useMemo(() => {
     const byDefenders = new Map<number, FormationName[]>();

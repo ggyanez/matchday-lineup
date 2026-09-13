@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
 import PositionTooltip from "@/components/PositionTooltip";
 import type { Player, PlayerInput } from "@/lib/domain/player";
@@ -11,6 +11,7 @@ import {
   fetchPlayers,
   updatePlayerRequest,
 } from "@/lib/api-client";
+import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
 
 /** Renders a "ARQ/DFC"-style list where each code has its own hover tooltip. */
 function PositionBadgeList({ positions }: { positions: Position[] }) {
@@ -37,9 +38,23 @@ export default function PlayersPage() {
   const [editing, setEditing] = useState<Player | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { players } = await fetchPlayers();
+    setPlayers(players);
+    setLoading(false);
+  }, []);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: fetching on mount */
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Covers Next's client Router Cache reusing this page, and the browser's
+  // bfcache restoring it verbatim on back/forward — both can otherwise show
+  // a player edited elsewhere with its old data.
+  useRefetchOnFocus(load);
 
   // The form renders above the list, which can be scrolled well out of view
   // by the time you click Edit on a player further down — bring it into
@@ -49,13 +64,6 @@ export default function PlayersPage() {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [showForm, editing]);
-
-  async function load() {
-    setLoading(true);
-    const { players } = await fetchPlayers();
-    setPlayers(players);
-    setLoading(false);
-  }
 
   async function handleCreate(input: PlayerInput) {
     await createPlayerRequest(input);
