@@ -37,6 +37,36 @@ function sameAssignments(a: SlotAssignments, b: SlotAssignments): boolean {
   return true;
 }
 
+/** The player attributes that feed the recommendation — used to notice drift since it was generated. */
+function lineupRelevantFingerprint(player: Player): string {
+  return JSON.stringify([
+    player.primaryPositions,
+    player.secondaryPositions,
+    player.preferredFoot,
+    player.injuryStatus,
+  ]);
+}
+
+/**
+ * True if any player referenced in `result` (on the pitch or the bench)
+ * has since had their positions, foot, or injury status edited — the AI
+ * explanation is just frozen text from generation time, so it can go
+ * stale even when the assignment itself hasn't changed (e.g. you edit a
+ * player's position on the Players page without regenerating).
+ */
+function playersChangedSinceGeneration(result: LineupResponse, currentPlayers: Player[]): boolean {
+  const currentById = new Map(currentPlayers.map((p) => [p.id, p]));
+  const snapshots = [...result.best.slots.map((s) => s.player), ...result.best.bench].filter(
+    (p): p is Player => p != null
+  );
+
+  return snapshots.some((snapshot) => {
+    const current = currentById.get(snapshot.id);
+    if (!current) return true; // no longer around — definitely stale
+    return lineupRelevantFingerprint(snapshot) !== lineupRelevantFingerprint(current);
+  });
+}
+
 export default function MatchDayPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +193,8 @@ export default function MatchDayPage() {
   const isShowingGeneratedBest =
     result !== null &&
     activeFormationName === result.best.formation &&
-    sameAssignments(assignments, assignmentsFromSlots(result.best.slots));
+    sameAssignments(assignments, assignmentsFromSlots(result.best.slots)) &&
+    !playersChangedSinceGeneration(result, players);
 
   function toggle(id: string) {
     setConfirmed((current) => {
@@ -383,8 +414,8 @@ export default function MatchDayPage() {
                 <p>{result.explanation}</p>
                 {!isShowingGeneratedBest && (
                   <p className="mt-2 text-xs italic text-black/50 dark:text-white/50">
-                    You&apos;ve edited this lineup since it was generated — the explanation above
-                    refers to the original suggestion.
+                    The lineup or a player&apos;s details (position, foot, injury) have changed
+                    since this was generated — the explanation above may be out of date.
                   </p>
                 )}
               </div>
