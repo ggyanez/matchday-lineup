@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listPlayers } from "@/lib/data/players-repository";
+import { listFavoriteFormations } from "@/lib/data/favorites-repository";
 import { recommendFormations } from "@/lib/lineup/matching";
 import { explainRecommendation } from "@/lib/ai/lineup-explainer";
 import { FORMATION_NAMES, type FormationName } from "@/lib/domain/formation";
@@ -28,7 +29,10 @@ export async function POST(request: NextRequest) {
     body.formations?.filter((f) => (FORMATION_NAMES as string[]).includes(f)) ??
     FORMATION_NAMES;
 
-  const allPlayers = await listPlayers();
+  const [allPlayers, favoriteFormations] = await Promise.all([
+    listPlayers(),
+    listFavoriteFormations(),
+  ]);
   const confirmedIds = new Set(body.playerIds);
   const confirmedPlayers = allPlayers.filter((p) => confirmedIds.has(p.id));
 
@@ -36,7 +40,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No matching confirmed players found." }, { status: 400 });
   }
 
-  const recommendations = recommendFormations(confirmedPlayers, candidateFormations, locale);
+  const recommendations = recommendFormations(
+    confirmedPlayers,
+    candidateFormations,
+    locale,
+    new Set(favoriteFormations)
+  );
   const [best, ...rest] = recommendations;
 
   const explanation = body.explain ? await explainRecommendation(best, rest, locale) : null;

@@ -335,18 +335,36 @@ export function assignFormation(
 }
 
 /**
+ * Small nudge applied only when ranking candidate formations against each
+ * other (see `recommendFormations`), not to any player's own fit score —
+ * a formation the team has starred as a favorite needs to be within this
+ * much average fit of a non-favorite to still come out on top, so the
+ * recommendation leans toward formations the team actually plays without
+ * ever picking a clearly worse-fitting one just because it's starred.
+ */
+const FAVORITE_FORMATION_BONUS = 0.2;
+
+/**
  * Evaluates every candidate formation (or a given subset) against the
  * confirmed players and returns them ranked from best to worst fit.
+ *
+ * `favoriteFormations` only affects the ranking here — the `averageScore`
+ * on each returned recommendation stays the plain, unboosted fit value,
+ * so what's displayed is never confused with this preference.
  */
 export function recommendFormations(
   players: Player[],
   candidates: FormationName[] = Object.keys(FORMATIONS) as FormationName[],
-  locale: Locale = DEFAULT_LOCALE
+  locale: Locale = DEFAULT_LOCALE,
+  favoriteFormations: ReadonlySet<FormationName> = new Set()
 ): FormationRecommendation[] {
+  const rankingScore = (r: FormationRecommendation) =>
+    r.averageScore + (favoriteFormations.has(r.formation) ? FAVORITE_FORMATION_BONUS : 0);
+
   return candidates
     .map((name) => assignFormation(players, FORMATIONS[name], locale))
     .sort((a, b) => {
       if (a.unfilledSlots !== b.unfilledSlots) return a.unfilledSlots - b.unfilledSlots;
-      return b.averageScore - a.averageScore;
+      return rankingScore(b) - rankingScore(a);
     });
 }
