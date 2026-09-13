@@ -24,7 +24,7 @@ export interface FormationSlot {
 export type FormationName =
   // Back four
   | "4-4-2"
-  | "4-4-2 diamond"
+  | "4-3-1-2"
   | "4-4-1-1"
   | "4-3-3"
   | "4-2-3-1"
@@ -69,8 +69,8 @@ export const FORMATIONS: Record<FormationName, Formation> = {
       { id: "DC-2", position: "DC", x: 62, y: 82 },
     ],
   },
-  "4-4-2 diamond": {
-    name: "4-4-2 diamond",
+  "4-3-1-2": {
+    name: "4-3-1-2",
     slots: [
       { id: "ARQ", position: "ARQ", x: 50, y: 9 },
       { id: "LI", position: "LI", x: 20, y: 23 },
@@ -418,7 +418,7 @@ export function withPositionOverrides(
 const FORMATION_DESCRIPTION_BY_LOCALE: Record<Locale, Record<FormationName, string>> = {
   es: {
     "4-4-2": "Equilibrado, dos líneas de cuatro detrás de una dupla de ataque.",
-    "4-4-2 diamond": "Un rombo central angosto alimenta a dos delanteros, a cambio de ancho por afuera.",
+    "4-3-1-2": "Un rombo central angosto alimenta a dos delanteros, a cambio de ancho por afuera.",
     "4-4-1-1": "Un delantero retrasado conecta el medio con el ataque, alimentando al delantero de área.",
     "4-3-3": "Ancho por los extremos, control del juego con un trío de mediocampistas.",
     "4-2-3-1": "Doble cinco que protege la línea de cuatro, con un solo delantero de área.",
@@ -445,7 +445,7 @@ const FORMATION_DESCRIPTION_BY_LOCALE: Record<Locale, Record<FormationName, stri
   },
   en: {
     "4-4-2": "Balanced, two banks of four behind a strike partnership.",
-    "4-4-2 diamond": "A narrow central diamond feeds two strikers, trading width for control.",
+    "4-3-1-2": "A narrow central diamond feeds two strikers, trading width for control.",
     "4-4-1-1": "A withdrawn forward links midfield and attack, feeding the striker ahead.",
     "4-3-3": "Width from the wingers, control through a midfield trio.",
     "4-2-3-1": "Double pivot shielding the back four, one out-and-out striker.",
