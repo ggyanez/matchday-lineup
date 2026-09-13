@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
 import type { Player, PlayerInput } from "@/lib/domain/player";
 import {
@@ -15,10 +15,20 @@ export default function PlayersPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Player | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     load();
   }, []);
+
+  // The form renders above the list, which can be scrolled well out of view
+  // by the time you click Edit on a player further down — bring it into
+  // view instead of silently opening off-screen.
+  useEffect(() => {
+    if (showForm || editing) {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showForm, editing]);
 
   async function load() {
     setLoading(true);
@@ -61,13 +71,13 @@ export default function PlayersPage() {
       </div>
 
       {showForm && (
-        <div className="mt-6">
+        <div ref={formRef} className="mt-6 scroll-mt-6">
           <PlayerForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
         </div>
       )}
 
       {editing && (
-        <div className="mt-6">
+        <div ref={formRef} className="mt-6 scroll-mt-6">
           <PlayerForm
             initial={editing}
             onSubmit={handleUpdate}
