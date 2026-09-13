@@ -78,15 +78,17 @@ export function compatibilityScore(player: Player, position: Position): number {
 /**
  * How much to knock off a player's score for being injured, so a confirmed
  * but injured player is only picked over a fit healthy one when there
- * isn't a healthy alternative — "last resort", not "excluded". A major
- * injury can drag even a perfect positional fit (3) below a healthy
- * player's generic same-line fallback (1); a minor knock only softens
- * their advantage over a healthy player's secondary option.
+ * isn't a healthy alternative — "last resort", not "excluded". Even a
+ * minor knock drops a player's best possible score (a first-listed
+ * primary position, 3) below any healthy player's secondary-position
+ * score (at most 2, floor 1.2) — playing hurt in your best position still
+ * loses to a healthy teammate filling in from a secondary one. A major
+ * injury goes further, dropping below even a healthy same-line fallback (1).
  */
 const INJURY_PENALTY: Record<Player["injuryStatus"], number> = {
   healthy: 0,
-  minor: 1,
-  major: 2.2,
+  minor: 1.9,
+  major: 2.5,
 };
 
 /**
