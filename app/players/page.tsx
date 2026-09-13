@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PlayerForm from "@/components/PlayerForm";
 import PositionTooltip from "@/components/PositionTooltip";
 import InjuryBadge from "@/components/InjuryBadge";
 import { getMembershipStatusLabel, getPreferredFootLabel, type Player, type PlayerInput } from "@/lib/domain/player";
-import { getPositionCode, type Position } from "@/lib/domain/position";
+import { getPositionCode, POSITIONS, type Position } from "@/lib/domain/position";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 import { formatRemoveConfirm } from "@/lib/i18n/translations";
 import {
@@ -34,13 +34,36 @@ function PositionBadgeList({ positions, locale }: { positions: Position[]; local
   );
 }
 
+type SortMode = "name" | "position";
+
+/** Index of a player's first-listed primary position in the canonical
+ * field order (goalkeeper, then defense, midfield, attack) — players
+ * with no primary position sort to the end. */
+function positionSortKey(player: Player): number {
+  const primary = player.primaryPositions[0];
+  const index = primary ? POSITIONS.indexOf(primary) : -1;
+  return index === -1 ? POSITIONS.length : index;
+}
+
 export default function PlayersPage() {
   const { locale, t } = useLocale();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Player | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>("name");
   const formRef = useRef<HTMLDivElement>(null);
+
+  // The server already returns players sorted by name, but the sort mode
+  // is purely a display concern — position order is computed here so
+  // switching it doesn't need a round-trip.
+  const sortedPlayers = useMemo(() => {
+    if (sortMode === "name") return players;
+    return [...players].sort((a, b) => {
+      const byPosition = positionSortKey(a) - positionSortKey(b);
+      return byPosition !== 0 ? byPosition : a.name.localeCompare(b.name);
+    });
+  }, [players, sortMode]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -118,6 +141,27 @@ export default function PlayersPage() {
         </div>
       )}
 
+      {!loading && players.length > 0 && (
+        <div className="mt-6 flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
+          {t("players.sortBy")}
+          {(["name", "position"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setSortMode(mode)}
+              aria-pressed={sortMode === mode}
+              className={`rounded-full border px-3 py-1 text-xs transition ${
+                sortMode === mode
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+              }`}
+            >
+              {mode === "name" ? t("players.sortByName") : t("players.sortByPosition")}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="mt-8">
         {loading ? (
           <p className="text-sm text-black/60 dark:text-white/60">{t("players.loading")}</p>
@@ -125,7 +169,7 @@ export default function PlayersPage() {
           <p className="text-sm text-black/60 dark:text-white/60">{t("players.empty")}</p>
         ) : (
           <ul className="divide-y divide-black/10 dark:divide-white/10">
-            {players.map((player) => (
+            {sortedPlayers.map((player) => (
               <li key={player.id} className="flex items-center justify-between py-3">
                 <div>
                   <p className="flex items-center gap-1.5 font-medium">

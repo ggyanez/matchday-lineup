@@ -33,6 +33,9 @@ const STRINGS = {
     "players.alsoLabel": " · también: ",
     "players.edit": "Editar",
     "players.remove": "Quitar",
+    "players.sortBy": "Ordenar por:",
+    "players.sortByName": "Nombre",
+    "players.sortByPosition": "Posición",
 
     "form.nameLabel": "Nombre",
     "form.namePlaceholder": "ej. Diego Gómez",
@@ -116,6 +119,9 @@ const STRINGS = {
     "players.alsoLabel": " · also: ",
     "players.edit": "Edit",
     "players.remove": "Remove",
+    "players.sortBy": "Sort by:",
+    "players.sortByName": "Name",
+    "players.sortByPosition": "Position",
 
     "form.nameLabel": "Name",
     "form.namePlaceholder": "e.g. Diego Gómez",
