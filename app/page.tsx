@@ -10,7 +10,7 @@ export default function HomePage() {
         have available — no more guessing the lineup an hour before kickoff.
       </p>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           href="/players"
           className="rounded-lg border border-black/10 p-6 transition hover:border-black/30 dark:border-white/10 dark:hover:border-white/30"
@@ -19,6 +19,17 @@ export default function HomePage() {
           <p className="mt-2 text-sm text-black/60 dark:text-white/60">
             Add, edit, and remove players, along with their primary and secondary
             positions.
+          </p>
+        </Link>
+
+        <Link
+          href="/formations"
+          className="rounded-lg border border-black/10 p-6 transition hover:border-black/30 dark:border-white/10 dark:hover:border-white/30"
+        >
+          <h2 className="font-medium">Formations</h2>
+          <p className="mt-2 text-sm text-black/60 dark:text-white/60">
+            Star the formations your team actually uses, so they show up first when
+            picking one in Match Day.
           </p>
         </Link>
 
