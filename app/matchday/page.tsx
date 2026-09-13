@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
 import type { Player } from "@/lib/domain/player";
-import { FORMATIONS, FORMATION_NAMES, type FormationName } from "@/lib/domain/formation";
+import {
+  FORMATIONS,
+  FORMATION_NAMES_BY_LINE_COUNTS,
+  type FormationName,
+} from "@/lib/domain/formation";
 import { fetchPlayers, generateLineup, type LineupResponse } from "@/lib/api-client";
 import { buildRecommendationFromAssignment, type SlotAssignment } from "@/lib/lineup/matching";
 import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
@@ -205,7 +209,7 @@ export default function MatchDayPage() {
             className="rounded border border-black/20 bg-transparent px-2 py-1 dark:border-white/20"
           >
             <option value="">Choose a formation…</option>
-            {FORMATION_NAMES.map((name) => (
+            {FORMATION_NAMES_BY_LINE_COUNTS.map((name) => (
               <option key={name} value={name}>
                 {name}
               </option>
