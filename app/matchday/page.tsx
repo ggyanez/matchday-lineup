@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import PitchBoard, { type SlotAssignments } from "@/components/PitchBoard";
 import { primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
+  POSITION_GROUP,
+  POSITION_GROUP_LABELS,
+  POSITION_GROUP_ORDER,
+  type PositionGroup,
+} from "@/lib/domain/position";
+import {
   FORMATIONS,
   FORMATION_NAMES_BY_LINE_COUNTS,
   type FormationName,
@@ -80,6 +86,20 @@ export default function MatchDayPage() {
     [players, confirmed]
   );
 
+  // Grouped by the player's first-listed primary position, so a long
+  // squad reads like a team sheet instead of one flat alphabetical list.
+  const playersByGroup = useMemo(() => {
+    const groups = new Map<PositionGroup | "none", Player[]>();
+    for (const player of players) {
+      const primary = player.primaryPositions[0];
+      const key: PositionGroup | "none" = primary ? POSITION_GROUP[primary] : "none";
+      const list = groups.get(key);
+      if (list) list.push(player);
+      else groups.set(key, [player]);
+    }
+    return groups;
+  }, [players]);
+
   const formationOptions = useMemo(
     () => (result ? [result.best, ...result.alternatives] : []),
     [result]
@@ -132,6 +152,25 @@ export default function MatchDayPage() {
     }
   }
 
+  /** Runs the same algorithm as "Generate", but locked to whichever formation is picked. */
+  async function handleForceFormation() {
+    if (!activeFormationName) return;
+    setError(null);
+    setGenerating(true);
+    try {
+      const response = await generateLineup(Array.from(confirmed), {
+        explain: explainWithAI,
+        formations: [activeFormationName],
+      });
+      setResult(response);
+      openFormation(response.best.formation, assignmentsFromSlots(response.best.slots));
+    } catch {
+      setError("Could not fit confirmed players into this formation.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   function handleReset() {
     setConfirmed(new Set());
     setExplainWithAI(false);
@@ -159,23 +198,36 @@ export default function MatchDayPage() {
             No players registered yet — add some on the Players page first.
           </p>
         ) : (
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {players.map((player) => (
-              <label
-                key={player.id}
-                className="flex items-center gap-2 rounded border border-black/10 px-3 py-2 text-sm dark:border-white/10"
-              >
-                <input
-                  type="checkbox"
-                  checked={confirmed.has(player.id)}
-                  onChange={() => toggle(player.id)}
-                />
-                <span>{player.name}</span>
-                <span className="text-black/50 dark:text-white/50">
-                  ({primaryPositionLabel(player) || "no position"})
-                </span>
-              </label>
-            ))}
+          <div className="mt-3 flex flex-col gap-5">
+            {[...POSITION_GROUP_ORDER, "none" as const].map((group) => {
+              const groupPlayers = playersByGroup.get(group);
+              if (!groupPlayers || groupPlayers.length === 0) return null;
+              return (
+                <div key={group}>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
+                    {group === "none" ? "No position set" : POSITION_GROUP_LABELS[group]}
+                  </h3>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {groupPlayers.map((player) => (
+                      <label
+                        key={player.id}
+                        className="flex items-center gap-2 rounded border border-black/10 px-3 py-2 text-sm dark:border-white/10"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={confirmed.has(player.id)}
+                          onChange={() => toggle(player.id)}
+                        />
+                        <span>{player.name}</span>
+                        <span className="text-black/50 dark:text-white/50">
+                          ({primaryPositionLabel(player) || "no position"})
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
@@ -216,6 +268,17 @@ export default function MatchDayPage() {
             ))}
           </select>
         </label>
+
+        {activeFormationName && (
+          <button
+            onClick={handleForceFormation}
+            disabled={confirmed.size === 0 || generating}
+            title="Fill this exact formation with the best assignment of confirmed players"
+            className="rounded border border-black/20 px-3 py-1 text-sm disabled:opacity-50 dark:border-white/20"
+          >
+            {generating ? "Assigning..." : `Force ${activeFormationName}`}
+          </button>
+        )}
 
         {(confirmed.size > 0 || result) && (
           <button

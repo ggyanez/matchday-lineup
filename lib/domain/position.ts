@@ -72,3 +72,18 @@ export const POSITION_GROUP: Record<Position, PositionGroup> = {
 export function isPosition(value: string): value is Position {
   return (POSITIONS as readonly string[]).includes(value);
 }
+
+/** Display order and labels for grouping players by their line. */
+export const POSITION_GROUP_ORDER: PositionGroup[] = [
+  "goalkeeper",
+  "defense",
+  "midfield",
+  "attack",
+];
+
+export const POSITION_GROUP_LABELS: Record<PositionGroup, string> = {
+  goalkeeper: "Goalkeepers",
+  defense: "Defenders",
+  midfield: "Midfielders",
+  attack: "Forwards",
+};
