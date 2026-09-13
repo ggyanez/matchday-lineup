@@ -48,3 +48,16 @@ export function generateLineup(
     body: JSON.stringify({ playerIds, ...options }),
   });
 }
+
+export function fetchFavoriteFormations(): Promise<{ formations: FormationName[] }> {
+  return request("/api/formation-favorites");
+}
+
+export function saveFavoriteFormations(
+  formations: FormationName[]
+): Promise<{ formations: FormationName[] }> {
+  return request("/api/formation-favorites", {
+    method: "PUT",
+    body: JSON.stringify({ formations }),
+  });
+}

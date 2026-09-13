@@ -14,7 +14,12 @@ import {
   FORMATION_NAMES_BY_LINE_COUNTS,
   type FormationName,
 } from "@/lib/domain/formation";
-import { fetchPlayers, generateLineup, type LineupResponse } from "@/lib/api-client";
+import {
+  fetchFavoriteFormations,
+  fetchPlayers,
+  generateLineup,
+  type LineupResponse,
+} from "@/lib/api-client";
 import { buildRecommendationFromAssignment, type SlotAssignment } from "@/lib/lineup/matching";
 import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
 
@@ -39,6 +44,7 @@ export default function MatchDayPage() {
   const [result, setResult] = useState<LineupResponse | null>(null);
   const [activeFormationName, setActiveFormationName] = useState<FormationName | null>(null);
   const [assignments, setAssignments] = useState<SlotAssignments>({});
+  const [favoriteFormations, setFavoriteFormations] = useState<Set<FormationName>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
 
@@ -48,6 +54,23 @@ export default function MatchDayPage() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    fetchFavoriteFormations().then(({ formations }) => {
+      setFavoriteFormations(new Set(formations));
+    });
+  }, []);
+
+  // Favorited formations (set on the Formations page) come first, each
+  // marked with a star; everything else follows in its usual line-size
+  // order.
+  const orderedFormationNames = useMemo(() => {
+    const favorites = FORMATION_NAMES_BY_LINE_COUNTS.filter((name) =>
+      favoriteFormations.has(name)
+    );
+    const rest = FORMATION_NAMES_BY_LINE_COUNTS.filter((name) => !favoriteFormations.has(name));
+    return [...favorites, ...rest];
+  }, [favoriteFormations]);
 
   // Restore whatever was left in progress (confirmed players, the board
   // layout, last generated lineup) so switching to another page and back
@@ -261,9 +284,9 @@ export default function MatchDayPage() {
             className="rounded border border-black/20 bg-transparent px-2 py-1 dark:border-white/20"
           >
             <option value="">Choose a formation…</option>
-            {FORMATION_NAMES_BY_LINE_COUNTS.map((name) => (
+            {orderedFormationNames.map((name) => (
               <option key={name} value={name}>
-                {name}
+                {favoriteFormations.has(name) ? `★ ${name}` : name}
               </option>
             ))}
           </select>

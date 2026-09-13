@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/players", label: "Players" },
+  { href: "/formations", label: "Formations" },
   { href: "/matchday", label: "Match Day" },
 ];
 
