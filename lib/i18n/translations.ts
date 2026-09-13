@@ -87,14 +87,14 @@ const STRINGS = {
     "matchday.noPlayersYet": "Todavía no hay jugadores cargados — agregá algunos primero en Jugadores.",
     "matchday.noPositionSet": "Sin posición",
     "matchday.noPositionInline": "sin posición",
-    "matchday.generate": "Generar alineación recomendada",
-    "matchday.generating": "Generando...",
-    "matchday.explainWithAI": "Explicar con IA",
-    "matchday.orBuildManually": "o armar a mano:",
     "matchday.chooseFormation": "Elegí una formación…",
+    "matchday.generateButton": "Generar Alineación",
+    "matchday.generatingButton": "Generando...",
     "matchday.forceTitle":
       "Completa esta formación exacta con la mejor asignación de los jugadores confirmados",
-    "matchday.assigning": "Asignando...",
+    "matchday.recommendButton": "Recomendar Alineación",
+    "matchday.recommendingButton": "Recomendando...",
+    "matchday.explainWithAI": "Explicar con IA",
     "matchday.reset": "Reiniciar",
     "matchday.generateError": "No se pudo generar la alineación. Probá confirmar al menos un jugador.",
     "matchday.forceError": "No se pudo encajar a los confirmados en esta formación.",
@@ -185,13 +185,13 @@ const STRINGS = {
     "matchday.noPlayersYet": "No players registered yet — add some on the Players page first.",
     "matchday.noPositionSet": "No position set",
     "matchday.noPositionInline": "no position",
-    "matchday.generate": "Generate recommended lineup",
-    "matchday.generating": "Generating...",
-    "matchday.explainWithAI": "Explain with AI",
-    "matchday.orBuildManually": "or build manually:",
     "matchday.chooseFormation": "Choose a formation…",
+    "matchday.generateButton": "Generate Lineup",
+    "matchday.generatingButton": "Generating...",
     "matchday.forceTitle": "Fill this exact formation with the best assignment of confirmed players",
-    "matchday.assigning": "Assigning...",
+    "matchday.recommendButton": "Recommend Lineup",
+    "matchday.recommendingButton": "Recommending...",
+    "matchday.explainWithAI": "Explain with AI",
     "matchday.reset": "Reset",
     "matchday.generateError": "Could not generate a lineup. Try confirming at least one player.",
     "matchday.forceError": "Could not fit confirmed players into this formation.",
@@ -238,8 +238,4 @@ export function formatFavorite(locale: Locale, name: string, isFavorite: boolean
     return isFavorite ? `Quitar ${name} de favoritas` : `Marcar ${name} como favorita`;
   }
   return isFavorite ? `Unfavorite ${name}` : `Favorite ${name}`;
-}
-
-export function formatForce(locale: Locale, formationName: string): string {
-  return locale === "es" ? `Forzar ${formationName}` : `Force ${formationName}`;
 }

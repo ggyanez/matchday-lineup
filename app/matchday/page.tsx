@@ -28,7 +28,6 @@ import { buildRecommendationFromAssignment, type SlotAssignment } from "@/lib/li
 import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
 import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
 import { useLocale } from "@/lib/i18n/LocaleContext";
-import { formatForce } from "@/lib/i18n/translations";
 
 function assignmentsFromSlots(slots: SlotAssignment[]): SlotAssignments {
   return Object.fromEntries(slots.map((s) => [s.slotId, s.player?.id ?? null]));
@@ -350,14 +349,47 @@ export default function MatchDayPage() {
         )}
       </section>
 
-      <section className="mt-6 flex flex-wrap items-center gap-4">
-        <button
-          onClick={handleGenerate}
-          disabled={confirmed.size === 0 || generating}
-          className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
-        >
-          {generating ? t("matchday.generating") : t("matchday.generate")}
-        </button>
+      <section className="mt-6 flex flex-col gap-4">
+        {/* Default path: pick a formation, then generate the best lineup for it. */}
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={activeFormationName ?? ""}
+            onChange={(e) => {
+              const name = e.target.value as FormationName | "";
+              if (name) openFormation(name);
+            }}
+            disabled={confirmed.size === 0}
+            className="rounded border border-black/20 bg-transparent px-2 py-1 text-sm dark:border-white/20"
+          >
+            <option value="">{t("matchday.chooseFormation")}</option>
+            {orderedFormationNames.map((name) => (
+              <option key={name} value={name}>
+                {favoriteFormations.has(name) ? `★ ${name}` : name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleForceFormation}
+            disabled={!activeFormationName || confirmed.size === 0 || generating}
+            title={t("matchday.forceTitle")}
+            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+          >
+            {generating ? t("matchday.generatingButton") : t("matchday.generateButton")}
+          </button>
+        </div>
+
+        {/* Secondary path: let the algorithm pick the best formation for you. */}
+        <div>
+          <button
+            onClick={handleGenerate}
+            disabled={confirmed.size === 0 || generating}
+            className="rounded border border-black/20 px-4 py-2 text-sm text-black/70 disabled:opacity-50 dark:border-white/20 dark:text-white/70"
+          >
+            {generating ? t("matchday.recommendingButton") : t("matchday.recommendButton")}
+          </button>
+        </div>
+
+        {/* Applies to whichever of the two buttons above is used. */}
         <label className="flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
           <input
             type="checkbox"
@@ -367,41 +399,10 @@ export default function MatchDayPage() {
           {t("matchday.explainWithAI")}
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
-          {t("matchday.orBuildManually")}
-          <select
-            value={activeFormationName ?? ""}
-            onChange={(e) => {
-              const name = e.target.value as FormationName | "";
-              if (name) openFormation(name);
-            }}
-            disabled={confirmed.size === 0}
-            className="rounded border border-black/20 bg-transparent px-2 py-1 dark:border-white/20"
-          >
-            <option value="">{t("matchday.chooseFormation")}</option>
-            {orderedFormationNames.map((name) => (
-              <option key={name} value={name}>
-                {favoriteFormations.has(name) ? `★ ${name}` : name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {activeFormationName && (
-          <button
-            onClick={handleForceFormation}
-            disabled={confirmed.size === 0 || generating}
-            title={t("matchday.forceTitle")}
-            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
-          >
-            {generating ? t("matchday.assigning") : formatForce(locale, activeFormationName)}
-          </button>
-        )}
-
         {(confirmed.size > 0 || result) && (
           <button
             onClick={handleReset}
-            className="text-sm text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
+            className="self-start text-sm text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
           >
             {t("matchday.reset")}
           </button>
