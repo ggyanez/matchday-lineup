@@ -5,15 +5,17 @@ import { DEFAULT_LOCALE, type Locale } from "../i18n/locale";
 const DEFAULT_MODEL = "claude-sonnet-5";
 
 /**
- * Asks Claude for a short, coach-style explanation of the recommended
- * lineup. This step is purely cosmetic — the recommendation itself is
- * produced deterministically by the matching algorithm, so the app keeps
- * working (minus this explanation) if no API key is configured or the
+ * Asks Claude for a short, coach-style analysis of a lineup — whatever
+ * is currently on the pitch board at the moment the user asks, which may
+ * be the algorithm's own recommendation, a hand-edited version of it, or
+ * something built entirely by dragging players around. This step is
+ * purely cosmetic — the lineup itself is decided deterministically by
+ * the app (algorithmically and/or by the user's own edits), so the app
+ * keeps working (minus this analysis) if no API key is configured or the
  * request fails.
  */
 export async function explainRecommendation(
-  best: FormationRecommendation,
-  alternatives: FormationRecommendation[],
+  recommendation: FormationRecommendation,
   locale: Locale = DEFAULT_LOCALE
 ): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -22,7 +24,7 @@ export async function explainRecommendation(
   const client = new Anthropic({ apiKey });
   const model = process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
 
-  const prompt = buildPrompt(best, alternatives, locale);
+  const prompt = buildPrompt(recommendation, locale);
 
   try {
     const response = await client.messages.create({
@@ -39,35 +41,27 @@ export async function explainRecommendation(
   }
 }
 
-function buildPrompt(
-  best: FormationRecommendation,
-  alternatives: FormationRecommendation[],
-  locale: Locale
-): string {
-  const lineup = best.slots
+function buildPrompt(recommendation: FormationRecommendation, locale: Locale): string {
+  const lineup = recommendation.slots
     .map((s) => `- ${s.position} (${s.slotId}): ${s.player ? s.player.name : "unfilled"} [${s.fit}]`)
     .join("\n");
 
-  const bench = best.bench.length > 0 ? best.bench.map((p) => p.name).join(", ") : "none";
-
-  const alternativesSummary = alternatives
-    .filter((a) => a.formation !== best.formation)
-    .slice(0, 2)
-    .map((a) => `${a.formation} (avg fit ${a.averageScore.toFixed(2)})`)
-    .join(", ");
+  const bench =
+    recommendation.bench.length > 0 ? recommendation.bench.map((p) => p.name).join(", ") : "none";
 
   return [
     "You are a concise assistant helping an amateur football coach understand a lineup",
-    "recommendation that was generated algorithmically (not by you). Explain briefly, in",
-    "plain language, why this formation and player assignment make sense given the squad",
-    "available for this match. Mention any notable trade-offs or players out of position.",
+    "for their next match, exactly as it stands right now (it may be the algorithm's own",
+    "recommendation, or the coach's own hand-edited version of it — you are analyzing the",
+    "end result, not deciding it). In plain language, point out both what works well AND",
+    "any real weaknesses or risks — players out of position, injuries in the lineup, weak",
+    "spots — don't just praise it uncritically if there's something worth flagging.",
     "Keep it to 3-4 short sentences, no headings, no bullet points.",
     "",
-    `Recommended formation: ${best.formation}`,
+    `Formation: ${recommendation.formation}`,
     `Lineup:\n${lineup}`,
     `Bench: ${bench}`,
-    best.warnings.length > 0 ? `Warnings: ${best.warnings.join(" ")}` : "",
-    alternativesSummary ? `Other formations considered: ${alternativesSummary}` : "",
+    recommendation.warnings.length > 0 ? `Warnings: ${recommendation.warnings.join(" ")}` : "",
     locale === "es" ? "Respond in Spanish." : "Respond in English.",
   ]
     .filter(Boolean)

@@ -12,8 +12,7 @@ import type { LineupResponse } from "./api-client";
  */
 export interface MatchDayDraft {
   confirmedIds: string[];
-  explainWithAI: boolean;
-  /** The last algorithmic recommendation, kept around for the alternatives tabs and the AI explanation. */
+  /** The last algorithmic recommendation, kept around for the alternatives tabs. */
   result: LineupResponse | null;
   /** Which formation the board is currently showing — set either by generating or by picking one manually. */
   activeFormation: FormationName | null;
@@ -21,17 +20,22 @@ export interface MatchDayDraft {
   assignments: Record<string, string | null>;
   /** Per-slot position relabels (e.g. a DC slot the user set to play as SD), keyed by slot id. */
   positionOverrides: Record<string, Position>;
+  /** The AI's analysis of the lineup, last requested manually via the "Analyze" button. */
+  analysis: string | null;
+  /** A fingerprint of the lineup the analysis above was actually generated from, to detect drift. */
+  analysisSnapshot: string | null;
 }
 
-const STORAGE_KEY = "matchday-lineup:draft:v2";
+const STORAGE_KEY = "matchday-lineup:draft:v3";
 
 const EMPTY_DRAFT: MatchDayDraft = {
   confirmedIds: [],
-  explainWithAI: false,
   result: null,
   activeFormation: null,
   assignments: {},
   positionOverrides: {},
+  analysis: null,
+  analysisSnapshot: null,
 };
 
 export function loadMatchDayDraft(): MatchDayDraft {

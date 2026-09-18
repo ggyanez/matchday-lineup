@@ -95,12 +95,14 @@ const STRINGS = {
     "matchday.or": "o",
     "matchday.recommendButton": "Recomendar Alineación",
     "matchday.recommendingButton": "Recomendando...",
-    "matchday.explainWithAI": "Explicar con IA",
     "matchday.reset": "Reiniciar",
     "matchday.generateError": "No se pudo generar la alineación. Probá confirmar al menos un jugador.",
     "matchday.forceError": "No se pudo encajar a los confirmados en esta formación.",
+    "matchday.analyzeButton": "Analizar alineación con IA",
+    "matchday.analyzingButton": "Analizando...",
+    "matchday.analysisError": "No se pudo analizar la alineación. Probá de nuevo.",
     "matchday.staleExplanationNote":
-      "La alineación o los datos de algún jugador (posición, pie, lesión) cambiaron desde que se generó esto — la explicación de arriba puede estar desactualizada.",
+      "La alineación o los datos de algún jugador (posición, pie, lesión) cambiaron desde que se pidió este análisis — puede estar desactualizado.",
     "matchday.bench": "Banco",
     "matchday.benchEmpty": "Todos los confirmados están en la cancha.",
 
@@ -218,12 +220,14 @@ const STRINGS = {
     "matchday.or": "or",
     "matchday.recommendButton": "Recommend Lineup",
     "matchday.recommendingButton": "Recommending...",
-    "matchday.explainWithAI": "Explain with AI",
     "matchday.reset": "Reset",
     "matchday.generateError": "Could not generate a lineup. Try confirming at least one player.",
     "matchday.forceError": "Could not fit confirmed players into this formation.",
+    "matchday.analyzeButton": "Analyze Lineup with AI",
+    "matchday.analyzingButton": "Analyzing...",
+    "matchday.analysisError": "Could not analyze the lineup. Please try again.",
     "matchday.staleExplanationNote":
-      "The lineup or a player's details (position, foot, injury) have changed since this was generated — the explanation above may be out of date.",
+      "The lineup or a player's details (position, foot, injury) have changed since this analysis was requested — it may be out of date.",
     "matchday.bench": "Bench",
     "matchday.benchEmpty": "Everyone confirmed is on the pitch.",
 

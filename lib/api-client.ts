@@ -37,16 +37,26 @@ export function deletePlayerRequest(id: string): Promise<{ ok: true }> {
 export interface LineupResponse {
   best: FormationRecommendation;
   alternatives: FormationRecommendation[];
-  explanation: string | null;
 }
 
 export function generateLineup(
   playerIds: string[],
-  options?: { formations?: FormationName[]; explain?: boolean; locale?: Locale }
+  options?: { formations?: FormationName[]; locale?: Locale }
 ): Promise<LineupResponse> {
   return request("/api/lineup", {
     method: "POST",
     body: JSON.stringify({ playerIds, ...options }),
+  });
+}
+
+/** Asks the AI to analyze whatever lineup is currently on the board, including any manual edits. */
+export function analyzeLineupRequest(
+  recommendation: FormationRecommendation,
+  locale: Locale
+): Promise<{ explanation: string | null }> {
+  return request("/api/lineup/analyze", {
+    method: "POST",
+    body: JSON.stringify({ recommendation, locale }),
   });
 }
 

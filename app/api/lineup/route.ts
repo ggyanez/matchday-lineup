@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { listPlayers } from "@/lib/data/players-repository";
 import { listFavoriteFormations } from "@/lib/data/favorites-repository";
 import { recommendFormations } from "@/lib/lineup/matching";
-import { explainRecommendation } from "@/lib/ai/lineup-explainer";
 import { FORMATION_NAMES, type FormationName } from "@/lib/domain/formation";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/locale";
 import { requireSession } from "@/lib/auth/session";
@@ -10,7 +9,6 @@ import { requireSession } from "@/lib/auth/session";
 interface LineupRequestBody {
   playerIds: string[];
   formations?: FormationName[];
-  explain?: boolean;
   locale?: Locale;
 }
 
@@ -52,7 +50,5 @@ export async function POST(request: NextRequest) {
   );
   const [best, ...rest] = recommendations;
 
-  const explanation = body.explain ? await explainRecommendation(best, rest, locale) : null;
-
-  return NextResponse.json({ best, alternatives: rest, explanation });
+  return NextResponse.json({ best, alternatives: rest });
 }

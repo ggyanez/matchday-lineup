@@ -19,6 +19,7 @@ import {
   type FormationName,
 } from "@/lib/domain/formation";
 import {
+  analyzeLineupRequest,
   fetchFavoriteFormations,
   fetchPlayers,
   generateLineup,
@@ -33,51 +34,11 @@ function assignmentsFromSlots(slots: SlotAssignment[]): SlotAssignments {
   return Object.fromEntries(slots.map((s) => [s.slotId, s.player?.id ?? null]));
 }
 
-function sameAssignments(a: SlotAssignments, b: SlotAssignments): boolean {
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  for (const key of keys) {
-    if ((a[key] ?? null) !== (b[key] ?? null)) return false;
-  }
-  return true;
-}
-
-/** The player attributes that feed the recommendation — used to notice drift since it was generated. */
-function lineupRelevantFingerprint(player: Player): string {
-  return JSON.stringify([
-    player.primaryPositions,
-    player.secondaryPositions,
-    player.preferredFoot,
-    player.injuryStatus,
-    player.membershipStatus,
-  ]);
-}
-
-/**
- * True if any player referenced in `result` (on the pitch or the bench)
- * has since had their positions, foot, or injury status edited — the AI
- * explanation is just frozen text from generation time, so it can go
- * stale even when the assignment itself hasn't changed (e.g. you edit a
- * player's position on the Players page without regenerating).
- */
-function playersChangedSinceGeneration(result: LineupResponse, currentPlayers: Player[]): boolean {
-  const currentById = new Map(currentPlayers.map((p) => [p.id, p]));
-  const snapshots = [...result.best.slots.map((s) => s.player), ...result.best.bench].filter(
-    (p): p is Player => p != null
-  );
-
-  return snapshots.some((snapshot) => {
-    const current = currentById.get(snapshot.id);
-    if (!current) return true; // no longer around — definitely stale
-    return lineupRelevantFingerprint(snapshot) !== lineupRelevantFingerprint(current);
-  });
-}
-
 export default function MatchDayPage() {
   const { locale, t } = useLocale();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
-  const [explainWithAI, setExplainWithAI] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<LineupResponse | null>(null);
   const [activeFormationName, setActiveFormationName] = useState<FormationName | null>(null);
@@ -86,6 +47,10 @@ export default function MatchDayPage() {
   const [favoriteFormations, setFavoriteFormations] = useState<Set<FormationName>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysisSnapshot, setAnalysisSnapshot] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const loadPlayers = useCallback(() => {
     fetchPlayers().then(({ players }) => {
@@ -140,11 +105,12 @@ export default function MatchDayPage() {
   useEffect(() => {
     const draft = loadMatchDayDraft();
     setConfirmed(new Set(draft.confirmedIds));
-    setExplainWithAI(draft.explainWithAI);
     setResult(draft.result);
     setActiveFormationName(draft.activeFormation);
     setAssignments(draft.assignments);
     setPositionOverrides(draft.positionOverrides);
+    setAnalysis(draft.analysis);
+    setAnalysisSnapshot(draft.analysisSnapshot);
     setRestored(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -155,13 +121,23 @@ export default function MatchDayPage() {
     if (!restored) return;
     saveMatchDayDraft({
       confirmedIds: Array.from(confirmed),
-      explainWithAI,
       result,
       activeFormation: activeFormationName,
       assignments,
       positionOverrides,
+      analysis,
+      analysisSnapshot,
     });
-  }, [restored, confirmed, explainWithAI, result, activeFormationName, assignments, positionOverrides]);
+  }, [
+    restored,
+    confirmed,
+    result,
+    activeFormationName,
+    assignments,
+    positionOverrides,
+    analysis,
+    analysisSnapshot,
+  ]);
 
   const confirmedPlayers = useMemo(
     () => players.filter((p) => confirmed.has(p.id)),
@@ -207,11 +183,37 @@ export default function MatchDayPage() {
     [effectiveFormation, confirmedPlayers, assignments, locale]
   );
 
-  const isShowingGeneratedBest =
-    result !== null &&
-    activeFormationName === result.best.formation &&
-    sameAssignments(assignments, assignmentsFromSlots(result.best.slots)) &&
-    !playersChangedSinceGeneration(result, players);
+  // A fingerprint of exactly what's on the board right now — formation,
+  // who's in which slot (and what position that slot is currently
+  // playing, after any override), who's on the bench, and each of those
+  // players' own relevant attributes. Comparing this against the
+  // snapshot taken when the AI analysis was last requested is how we
+  // detect that the analysis has gone stale (a drag-and-drop edit, an
+  // override, or even an edit to a player's data elsewhere).
+  const liveFingerprint = useMemo(() => {
+    if (!live) return null;
+    return JSON.stringify({
+      formation: live.formation,
+      slots: live.slots.map((s) => ({
+        slotId: s.slotId,
+        position: s.position,
+        player: s.player
+          ? [
+              s.player.id,
+              s.player.primaryPositions,
+              s.player.secondaryPositions,
+              s.player.preferredFoot,
+              s.player.injuryStatus,
+              s.player.membershipStatus,
+            ]
+          : null,
+      })),
+      bench: live.bench.map((p) => p.id),
+    });
+  }, [live]);
+
+  const isAnalysisStale =
+    analysis !== null && analysisSnapshot !== null && analysisSnapshot !== liveFingerprint;
 
   function toggle(id: string) {
     setConfirmed((current) => {
@@ -226,6 +228,28 @@ export default function MatchDayPage() {
     setActiveFormationName(name);
     setAssignments(initialAssignments);
     setPositionOverrides({});
+    setAnalysis(null);
+    setAnalysisSnapshot(null);
+    setAnalysisError(null);
+  }
+
+  async function handleAnalyze() {
+    if (!live) return;
+    setAnalyzing(true);
+    setAnalysisError(null);
+    try {
+      const { explanation } = await analyzeLineupRequest(live, locale);
+      if (explanation) {
+        setAnalysis(explanation);
+        setAnalysisSnapshot(liveFingerprint);
+      } else {
+        setAnalysisError(t("matchday.analysisError"));
+      }
+    } catch {
+      setAnalysisError(t("matchday.analysisError"));
+    } finally {
+      setAnalyzing(false);
+    }
   }
 
   /** Relabels one slot as one of its tactical alternatives (or clears the override, if choosing the slot's own base position). */
@@ -245,10 +269,7 @@ export default function MatchDayPage() {
     setError(null);
     setGenerating(true);
     try {
-      const response = await generateLineup(Array.from(confirmed), {
-        explain: explainWithAI,
-        locale,
-      });
+      const response = await generateLineup(Array.from(confirmed), { locale });
       setResult(response);
       openFormation(response.best.formation, assignmentsFromSlots(response.best.slots));
     } catch {
@@ -265,7 +286,6 @@ export default function MatchDayPage() {
     setGenerating(true);
     try {
       const response = await generateLineup(Array.from(confirmed), {
-        explain: explainWithAI,
         formations: [activeFormationName],
         locale,
       });
@@ -280,11 +300,13 @@ export default function MatchDayPage() {
 
   function handleReset() {
     setConfirmed(new Set());
-    setExplainWithAI(false);
     setResult(null);
     setActiveFormationName(null);
     setAssignments({});
     setPositionOverrides({});
+    setAnalysis(null);
+    setAnalysisSnapshot(null);
+    setAnalysisError(null);
     setError(null);
     clearMatchDayDraft();
   }
@@ -388,16 +410,6 @@ export default function MatchDayPage() {
           </button>
         </div>
 
-        {/* Applies to whichever of the two buttons above is used. */}
-        <label className="flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
-          <input
-            type="checkbox"
-            checked={explainWithAI}
-            onChange={(e) => setExplainWithAI(e.target.checked)}
-          />
-          {t("matchday.explainWithAI")}
-        </label>
-
         {(confirmed.size > 0 || result) && (
           <button
             onClick={handleReset}
@@ -454,10 +466,22 @@ export default function MatchDayPage() {
               </ul>
             )}
 
-            {result?.explanation && activeFormationName === result.best.formation && (
+            <button
+              onClick={handleAnalyze}
+              disabled={analyzing}
+              className="mt-3 rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+            >
+              {analyzing ? `✨ ${t("matchday.analyzingButton")}` : `✨ ${t("matchday.analyzeButton")}`}
+            </button>
+
+            {analysisError && (
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{analysisError}</p>
+            )}
+
+            {analysis && (
               <div className="mt-4 rounded border border-black/10 bg-black/5 p-3 text-sm dark:border-white/10 dark:bg-white/5">
-                <p>{result.explanation}</p>
-                {!isShowingGeneratedBest && (
+                <p>{analysis}</p>
+                {isAnalysisStale && (
                   <p className="mt-2 text-xs italic text-black/50 dark:text-white/50">
                     {t("matchday.staleExplanationNote")}
                   </p>
