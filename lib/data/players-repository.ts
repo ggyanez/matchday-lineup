@@ -1,11 +1,25 @@
 import type { Player, PlayerInput } from "../domain/player";
+import type { JsonDocumentStore } from "./json-store";
 import { createJsonStore } from "./store";
 
 interface PlayersDocument {
   players: Player[];
 }
 
-const store = createJsonStore<PlayersDocument>("players.json", { players: [] });
+// Players belong to a team, not a user — one store per team, keyed by
+// teamId, each backed by its own file (teams/<teamId>/players.json).
+// Cached so repeated calls within the same process reuse the same
+// store instance instead of re-constructing it every time.
+const storesByTeam = new Map<string, JsonDocumentStore<PlayersDocument>>();
+
+function getStore(teamId: string): JsonDocumentStore<PlayersDocument> {
+  let store = storesByTeam.get(teamId);
+  if (!store) {
+    store = createJsonStore<PlayersDocument>(`teams/${teamId}/players.json`, { players: [] });
+    storesByTeam.set(teamId, store);
+  }
+  return store;
+}
 
 function generateId(): string {
   return `p_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -37,18 +51,18 @@ function migratePlayer(
   };
 }
 
-export async function listPlayers(): Promise<Player[]> {
-  const { players } = await store.read();
+export async function listPlayers(teamId: string): Promise<Player[]> {
+  const { players } = await getStore(teamId).read();
   return players.map(migratePlayer).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function getPlayer(id: string): Promise<Player | null> {
-  const { players } = await store.read();
+export async function getPlayer(teamId: string, id: string): Promise<Player | null> {
+  const { players } = await getStore(teamId).read();
   const found = players.find((p) => p.id === id);
   return found ? migratePlayer(found) : null;
 }
 
-export async function createPlayer(input: PlayerInput): Promise<Player> {
+export async function createPlayer(teamId: string, input: PlayerInput): Promise<Player> {
   const now = new Date().toISOString();
   const player: Player = {
     id: generateId(),
@@ -63,7 +77,7 @@ export async function createPlayer(input: PlayerInput): Promise<Player> {
     updatedAt: now,
   };
 
-  await store.update(
+  await getStore(teamId).update(
     (doc) => ({ players: [...doc.players, player] }),
     `Add player: ${player.name}`
   );
@@ -71,10 +85,10 @@ export async function createPlayer(input: PlayerInput): Promise<Player> {
   return player;
 }
 
-export async function updatePlayer(id: string, input: PlayerInput): Promise<Player> {
+export async function updatePlayer(teamId: string, id: string, input: PlayerInput): Promise<Player> {
   let updated: Player | null = null;
 
-  await store.update((doc) => {
+  await getStore(teamId).update((doc) => {
     const players = doc.players.map((p) => {
       if (p.id !== id) return p;
       updated = {
@@ -97,8 +111,8 @@ export async function updatePlayer(id: string, input: PlayerInput): Promise<Play
   return updated;
 }
 
-export async function deletePlayer(id: string): Promise<void> {
-  await store.update(
+export async function deletePlayer(teamId: string, id: string): Promise<void> {
+  await getStore(teamId).update(
     (doc) => ({ players: doc.players.filter((p) => p.id !== id) }),
     `Remove player: ${id}`
   );

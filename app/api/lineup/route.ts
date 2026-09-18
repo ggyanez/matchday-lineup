@@ -5,6 +5,7 @@ import { recommendFormations } from "@/lib/lineup/matching";
 import { explainRecommendation } from "@/lib/ai/lineup-explainer";
 import { FORMATION_NAMES, type FormationName } from "@/lib/domain/formation";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/locale";
+import { requireSession } from "@/lib/auth/session";
 
 interface LineupRequestBody {
   playerIds: string[];
@@ -14,6 +15,9 @@ interface LineupRequestBody {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
+
   const body = (await request.json().catch(() => null)) as LineupRequestBody | null;
 
   if (!body || !Array.isArray(body.playerIds) || body.playerIds.length === 0) {
@@ -30,8 +34,8 @@ export async function POST(request: NextRequest) {
     FORMATION_NAMES;
 
   const [allPlayers, favoriteFormations] = await Promise.all([
-    listPlayers(),
-    listFavoriteFormations(),
+    listPlayers(session.teamId),
+    listFavoriteFormations(session.teamId),
   ]);
   const confirmedIds = new Set(body.playerIds);
   const confirmedPlayers = allPlayers.filter((p) => confirmedIds.has(p.id));

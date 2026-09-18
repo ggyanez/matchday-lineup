@@ -106,6 +106,31 @@ const STRINGS = {
 
     "language.spanish": "Español",
     "language.english": "English",
+
+    "login.heading": "Iniciar sesión",
+    "login.teamLabel": "Equipo",
+    "login.usernameLabel": "Usuario",
+    "login.passwordLabel": "Contraseña",
+    "login.submit": "Ingresar",
+    "login.submitting": "Ingresando...",
+    "login.error": "Equipo, usuario o contraseña incorrectos.",
+    "login.genericError": "No se pudo iniciar sesión. Probá de nuevo.",
+
+    "nav.team": "Equipo",
+    "nav.logout": "Cerrar sesión",
+    "nav.loggedInAs": "conectado como",
+
+    "team.heading": "Equipo",
+    "team.subtitle": "Los usuarios que ves acá tienen acceso a los mismos jugadores y formaciones que vos — no hay roles todavía, cualquiera puede gestionar todo.",
+    "team.loading": "Cargando...",
+    "team.membersHeading": "Usuarios",
+    "team.addMember": "Agregar usuario",
+    "team.addMemberUsernameLabel": "Usuario",
+    "team.addMemberPasswordLabel": "Contraseña",
+    "team.addMemberSubmit": "Agregar",
+    "team.addMemberSubmitting": "Agregando...",
+    "team.addMemberCancel": "Cancelar",
+    "team.addMemberError": "No se pudo agregar el usuario.",
   },
   en: {
     "nav.players": "Players",
@@ -204,6 +229,31 @@ const STRINGS = {
 
     "language.spanish": "Español",
     "language.english": "English",
+
+    "login.heading": "Sign in",
+    "login.teamLabel": "Team",
+    "login.usernameLabel": "Username",
+    "login.passwordLabel": "Password",
+    "login.submit": "Sign in",
+    "login.submitting": "Signing in...",
+    "login.error": "Wrong team, username, or password.",
+    "login.genericError": "Could not sign in. Please try again.",
+
+    "nav.team": "Team",
+    "nav.logout": "Log out",
+    "nav.loggedInAs": "signed in as",
+
+    "team.heading": "Team",
+    "team.subtitle": "Everyone you see here has the same access to your players and formations as you — there are no roles yet, anyone can manage everything.",
+    "team.loading": "Loading...",
+    "team.membersHeading": "Users",
+    "team.addMember": "Add user",
+    "team.addMemberUsernameLabel": "Username",
+    "team.addMemberPasswordLabel": "Password",
+    "team.addMemberSubmit": "Add",
+    "team.addMemberSubmitting": "Adding...",
+    "team.addMemberCancel": "Cancel",
+    "team.addMemberError": "Could not add that user.",
   },
 } as const satisfies Record<Locale, Record<string, string>>;
 

@@ -62,3 +62,37 @@ export function saveFavoriteFormations(
     body: JSON.stringify({ formations }),
   });
 }
+
+export function loginRequest(
+  team: string,
+  username: string,
+  password: string
+): Promise<{ user: { username: string; teamName: string } }> {
+  return request("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ team, username, password }),
+  });
+}
+
+export function logoutRequest(): Promise<{ ok: true }> {
+  return request("/api/auth/logout", { method: "POST" });
+}
+
+export interface TeamMember {
+  username: string;
+  createdAt: string;
+}
+
+export function fetchTeamMembers(): Promise<{ members: TeamMember[] }> {
+  return request("/api/team/members");
+}
+
+export function addTeamMemberRequest(
+  username: string,
+  password: string
+): Promise<{ member: TeamMember }> {
+  return request("/api/team/members", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  });
+}

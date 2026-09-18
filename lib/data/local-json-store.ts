@@ -30,7 +30,9 @@ export class LocalJsonStore<T> implements JsonDocumentStore<T> {
   async update(mutate: (current: T) => T): Promise<T> {
     const current = await this.read();
     const next = mutate(current);
-    await mkdir(DATA_DIR, { recursive: true });
+    // `fileName` can include subdirectories (e.g. "teams/niketator/players.json"),
+    // so create the file's own directory, not just DATA_DIR itself.
+    await mkdir(path.dirname(this.filePath), { recursive: true });
     await writeFile(this.filePath, JSON.stringify(next, null, 2), "utf-8");
     return next;
   }
