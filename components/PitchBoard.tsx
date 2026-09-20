@@ -5,6 +5,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -101,12 +102,19 @@ export default function PitchBoard({
     const fromSlotId =
       Object.keys(assignments).find((slotId) => assignments[slotId] === draggedId) ?? null;
 
-    if (!overId) {
-      // Dropped on open grass rather than another slot or the bench — if
-      // it came from a slot, treat this as a free-form nudge of that
-      // slot's marker instead of a no-op. A bench player dropped nowhere
-      // has no slot to attach a position to, so nothing happens, same as
-      // before.
+    // A drop that lands back over the dragged player's own slot (its
+    // droppable zone is always there, so a short drag that doesn't clear
+    // it still "hits" it) isn't a swap with anyone — treat it the same as
+    // dropping on open grass, a free nudge to wherever it was actually
+    // released, instead of snapping back to the formation's default spot.
+    const droppedOnOwnSlot = fromSlotId != null && overId === `${SLOT_DROP_PREFIX}${fromSlotId}`;
+
+    if (!overId || droppedOnOwnSlot) {
+      // Dropped on open grass (or back on its own slot) rather than
+      // someone else's slot or the bench — if it came from a slot, treat
+      // this as a free-form nudge of that slot's marker instead of a
+      // no-op. A bench player dropped nowhere has no slot to attach a
+      // position to, so nothing happens, same as before.
       if (!fromSlotId || !pitchRef.current) return;
       const dropRect = event.active.rect.current.translated;
       if (!dropRect) return;
@@ -146,7 +154,6 @@ export default function PitchBoard({
 
     if (!overId.startsWith(SLOT_DROP_PREFIX)) return;
     const toSlotId = overId.slice(SLOT_DROP_PREFIX.length);
-    if (toSlotId === fromSlotId) return;
 
     const displacedPlayerId = assignments[toSlotId] ?? null;
     const next: SlotAssignments = { ...assignments, [toSlotId]: draggedId };
@@ -159,6 +166,7 @@ export default function PitchBoard({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
