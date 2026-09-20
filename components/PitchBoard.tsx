@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -20,6 +20,11 @@ import PlayerChip from "./PlayerChip";
 
 export type SlotAssignments = Record<string, string | null>;
 export type PositionOverrides = Record<string, Position>;
+export type PositionNudges = Record<string, { x: number; y: number }>;
+
+// Keeps a nudged marker fully visible inside the pitch's overflow-hidden
+// box, even right at an edge.
+const NUDGE_MARGIN = 5;
 
 interface PitchBoardProps {
   /** The formation's own, unmodified slot definitions — always the base for each slot's alternatives menu, regardless of any active override. */
@@ -31,12 +36,17 @@ interface PitchBoardProps {
   /** Per-slot position overrides, keyed by slot id — e.g. a DC slot relabeled to SD. */
   positionOverrides: PositionOverrides;
   onPositionOverrideChange: (slotId: string, position: Position) => void;
+  /** Per-slot free-form marker position, keyed by slot id — a manual nudge away from the formation's own coordinates, purely visual. */
+  positionNudges: PositionNudges;
+  onPositionNudgeChange: (slotId: string, position: { x: number; y: number }) => void;
 }
 
 /**
  * An interactive pitch: drag a player from a slot to another slot (swaps
  * them), from the bench onto a slot (fills it, benching whoever was there),
- * or from a slot back onto the bench (unassigns them). Works with mouse,
+ * from a slot back onto the bench (unassigns them), or from a slot to any
+ * open patch of grass (nudges their marker there — a purely visual tweak,
+ * they stay in the same slot for scoring purposes). Works with mouse,
  * touch, and pen via dnd-kit's pointer sensor.
  *
  * Clicking (not dragging) a player on the pitch opens a small menu to
@@ -51,9 +61,12 @@ export default function PitchBoard({
   onAssignmentsChange,
   positionOverrides,
   onPositionOverrideChange,
+  positionNudges,
+  onPositionNudgeChange,
 }: PitchBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [openMenuSlotId, setOpenMenuSlotId] = useState<string | null>(null);
+  const pitchRef = useRef<HTMLDivElement>(null);
   const { locale, t } = useLocale();
 
   const sensors = useSensors(
@@ -84,10 +97,46 @@ export default function PitchBoard({
     setActiveId(null);
     const draggedId = String(event.active.id);
     const overId = event.over ? String(event.over.id) : null;
-    if (!overId) return;
 
     const fromSlotId =
       Object.keys(assignments).find((slotId) => assignments[slotId] === draggedId) ?? null;
+
+    if (!overId) {
+      // Dropped on open grass rather than another slot or the bench — if
+      // it came from a slot, treat this as a free-form nudge of that
+      // slot's marker instead of a no-op. A bench player dropped nowhere
+      // has no slot to attach a position to, so nothing happens, same as
+      // before.
+      if (!fromSlotId || !pitchRef.current) return;
+      const dropRect = event.active.rect.current.translated;
+      if (!dropRect) return;
+
+      const pitchRect = pitchRef.current.getBoundingClientRect();
+      const centerX = dropRect.left + dropRect.width / 2;
+      const centerY = dropRect.top + dropRect.height / 2;
+
+      // Ignore drops that land outside the pitch entirely (e.g. dragged
+      // off into the bench's surrounding whitespace but not onto it).
+      if (
+        centerX < pitchRect.left ||
+        centerX > pitchRect.right ||
+        centerY < pitchRect.top ||
+        centerY > pitchRect.bottom
+      ) {
+        return;
+      }
+
+      const xPercent = ((centerX - pitchRect.left) / pitchRect.width) * 100;
+      // The pitch positions slots with `bottom: y%`, so y grows upward —
+      // invert the pixel-from-top measurement to match.
+      const yPercent = ((pitchRect.bottom - centerY) / pitchRect.height) * 100;
+
+      onPositionNudgeChange(fromSlotId, {
+        x: Math.min(100 - NUDGE_MARGIN, Math.max(NUDGE_MARGIN, xPercent)),
+        y: Math.min(100 - NUDGE_MARGIN, Math.max(NUDGE_MARGIN, yPercent)),
+      });
+      return;
+    }
 
     if (overId === BENCH_DROP_ID) {
       if (!fromSlotId) return; // already on the bench
@@ -115,6 +164,7 @@ export default function PitchBoard({
       onDragCancel={() => setActiveId(null)}
     >
       <div
+        ref={pitchRef}
         className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-emerald-800"
         onClick={() => setOpenMenuSlotId(null)}
       >
@@ -126,12 +176,13 @@ export default function PitchBoard({
           const playerId = assignments[slot.id];
           const player = playerId ? playersById.get(playerId) ?? null : null;
           const activePosition = positionOverrides[slot.id] ?? slot.position;
+          const nudge = positionNudges[slot.id];
           return (
             <DroppableSlot
               key={slot.id}
               slotId={slot.id}
-              x={slot.x}
-              y={slot.y}
+              x={nudge?.x ?? slot.x}
+              y={nudge?.y ?? slot.y}
               basePosition={slot.position}
               activePosition={activePosition}
               player={player}

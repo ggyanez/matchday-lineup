@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import PitchBoard, { type PositionOverrides, type SlotAssignments } from "@/components/PitchBoard";
+import PitchBoard, {
+  type PositionNudges,
+  type PositionOverrides,
+  type SlotAssignments,
+} from "@/components/PitchBoard";
 import InjuryBadge from "@/components/InjuryBadge";
 import { getMembershipStatusLabel, primaryPositionLabel, type Player } from "@/lib/domain/player";
 import {
@@ -44,6 +48,7 @@ export default function MatchDayPage() {
   const [activeFormationName, setActiveFormationName] = useState<FormationName | null>(null);
   const [assignments, setAssignments] = useState<SlotAssignments>({});
   const [positionOverrides, setPositionOverrides] = useState<PositionOverrides>({});
+  const [positionNudges, setPositionNudges] = useState<PositionNudges>({});
   const [favoriteFormations, setFavoriteFormations] = useState<Set<FormationName>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
@@ -109,6 +114,7 @@ export default function MatchDayPage() {
     setActiveFormationName(draft.activeFormation);
     setAssignments(draft.assignments);
     setPositionOverrides(draft.positionOverrides);
+    setPositionNudges(draft.positionNudges);
     setAnalysis(draft.analysis);
     setAnalysisSnapshot(draft.analysisSnapshot);
     setRestored(true);
@@ -125,6 +131,7 @@ export default function MatchDayPage() {
       activeFormation: activeFormationName,
       assignments,
       positionOverrides,
+      positionNudges,
       analysis,
       analysisSnapshot,
     });
@@ -135,6 +142,7 @@ export default function MatchDayPage() {
     activeFormationName,
     assignments,
     positionOverrides,
+    positionNudges,
     analysis,
     analysisSnapshot,
   ]);
@@ -228,9 +236,15 @@ export default function MatchDayPage() {
     setActiveFormationName(name);
     setAssignments(initialAssignments);
     setPositionOverrides({});
+    setPositionNudges({});
     setAnalysis(null);
     setAnalysisSnapshot(null);
     setAnalysisError(null);
+  }
+
+  /** Manually nudges a slot's marker to a free-form spot on the pitch — purely visual, doesn't affect scoring. */
+  function handlePositionNudgeChange(slotId: string, position: { x: number; y: number }) {
+    setPositionNudges((current) => ({ ...current, [slotId]: position }));
   }
 
   async function handleAnalyze() {
@@ -304,6 +318,7 @@ export default function MatchDayPage() {
     setActiveFormationName(null);
     setAssignments({});
     setPositionOverrides({});
+    setPositionNudges({});
     setAnalysis(null);
     setAnalysisSnapshot(null);
     setAnalysisError(null);
@@ -449,6 +464,8 @@ export default function MatchDayPage() {
               onAssignmentsChange={setAssignments}
               positionOverrides={positionOverrides}
               onPositionOverrideChange={handlePositionOverrideChange}
+              positionNudges={positionNudges}
+              onPositionNudgeChange={handlePositionNudgeChange}
             />
           </div>
 

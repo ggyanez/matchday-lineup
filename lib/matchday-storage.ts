@@ -20,6 +20,8 @@ export interface MatchDayDraft {
   assignments: Record<string, string | null>;
   /** Per-slot position relabels (e.g. a DC slot the user set to play as SD), keyed by slot id. */
   positionOverrides: Record<string, Position>;
+  /** Per-slot marker nudges (a manual drag to a free spot on the pitch), keyed by slot id — purely visual. */
+  positionNudges: Record<string, { x: number; y: number }>;
   /** The AI's analysis of the lineup, last requested manually via the "Analyze" button. */
   analysis: string | null;
   /** A fingerprint of the lineup the analysis above was actually generated from, to detect drift. */
@@ -34,6 +36,7 @@ const EMPTY_DRAFT: MatchDayDraft = {
   activeFormation: null,
   assignments: {},
   positionOverrides: {},
+  positionNudges: {},
   analysis: null,
   analysisSnapshot: null,
 };
