@@ -31,53 +31,68 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col px-6 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">{t("login.heading")}</h1>
+    <div className="flex flex-1 items-center justify-center px-6 py-12">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/15 text-2xl">
+            ⚽
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("login.heading")}</h1>
+          <p className="mt-1.5 text-sm text-muted">{t("login.subtitle")}</p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          {t("login.teamLabel")}
-          <input
-            value={team}
-            onChange={(e) => setTeam(e.target.value)}
-            className="rounded border border-black/20 bg-transparent px-3 py-2 dark:border-white/20"
-            autoCapitalize="none"
-            autoComplete="organization"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          {t("login.usernameLabel")}
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="rounded border border-black/20 bg-transparent px-3 py-2 dark:border-white/20"
-            autoCapitalize="none"
-            autoComplete="username"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          {t("login.passwordLabel")}
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded border border-black/20 bg-transparent px-3 py-2 dark:border-white/20"
-            autoComplete="current-password"
-          />
-        </label>
-
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={submitting || !team.trim() || !username.trim() || !password}
-          className="mt-2 rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6 shadow-lg shadow-black/20"
         >
-          {submitting ? t("login.submitting") : t("login.submit")}
-        </button>
-      </form>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium text-foreground/90">{t("login.teamLabel")}</span>
+            <input
+              value={team}
+              onChange={(e) => setTeam(e.target.value)}
+              className="rounded-lg border border-border-strong bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
+              autoCapitalize="none"
+              autoComplete="organization"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium text-foreground/90">{t("login.usernameLabel")}</span>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="rounded-lg border border-border-strong bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
+              autoCapitalize="none"
+              autoComplete="username"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium text-foreground/90">{t("login.passwordLabel")}</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rounded-lg border border-border-strong bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
+              autoComplete="current-password"
+            />
+          </label>
+
+          {error && (
+            <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting || !team.trim() || !username.trim() || !password}
+            className="mt-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {submitting ? t("login.submitting") : t("login.submit")}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

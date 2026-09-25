@@ -110,6 +110,7 @@ const STRINGS = {
     "language.english": "English",
 
     "login.heading": "Iniciar sesión",
+    "login.subtitle": "Ingresá con tu equipo para armar la alineación.",
     "login.teamLabel": "Equipo",
     "login.usernameLabel": "Usuario",
     "login.passwordLabel": "Contraseña",
@@ -235,6 +236,7 @@ const STRINGS = {
     "language.english": "English",
 
     "login.heading": "Sign in",
+    "login.subtitle": "Sign in with your team to build the lineup.",
     "login.teamLabel": "Team",
     "login.usernameLabel": "Username",
     "login.passwordLabel": "Password",

@@ -30,25 +30,26 @@ export default function NavBar({ user }: NavBarProps) {
   }
 
   return (
-    <header className="border-b border-black/10 dark:border-white/10">
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-        <Link href={user ? "/" : "/login"} className="font-semibold tracking-tight">
+    <header className="border-b border-border bg-surface/60 backdrop-blur">
+      <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-4">
+        <Link
+          href={user ? "/" : "/login"}
+          className="flex shrink-0 items-center gap-2 font-semibold tracking-tight"
+        >
+          <span className="text-lg">⚽</span>
           Matchday Lineup
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           {user && (
-            <nav className="flex gap-6 text-sm">
-              <Link
-                href="/lineup"
-                className="font-semibold text-black hover:opacity-70 dark:text-white"
-              >
+            <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+              <Link href="/lineup" className="font-semibold text-accent hover:text-accent-hover">
                 {t("nav.matchday")}
               </Link>
               {links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-black/70 hover:text-black dark:text-white/70 dark:hover:text-white"
+                  className="text-muted transition hover:text-foreground"
                 >
                   {link.label}
                 </Link>
@@ -56,7 +57,7 @@ export default function NavBar({ user }: NavBarProps) {
             </nav>
           )}
           {user && (
-            <div className="hidden text-xs text-black/50 sm:block dark:text-white/50">
+            <div className="hidden text-xs text-muted sm:block">
               {user.teamName} · {t("nav.loggedInAs")} {user.username}
             </div>
           )}
@@ -90,7 +91,7 @@ export default function NavBar({ user }: NavBarProps) {
             <button
               type="button"
               onClick={handleLogout}
-              className="text-sm text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
+              className="text-sm text-muted transition hover:text-danger"
             >
               {t("nav.logout")}
             </button>
