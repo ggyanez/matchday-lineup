@@ -33,6 +33,7 @@ import { buildRecommendationFromAssignment, type SlotAssignment } from "@/lib/li
 import { clearMatchDayDraft, loadMatchDayDraft, saveMatchDayDraft } from "@/lib/matchday-storage";
 import { useRefetchOnFocus } from "@/lib/use-refetch-on-focus";
 import { useLocale } from "@/lib/i18n/LocaleContext";
+import { formatConfirmedCount } from "@/lib/i18n/translations";
 
 function assignmentsFromSlots(slots: SlotAssignment[]): SlotAssignments {
   return Object.fromEntries(slots.map((s) => [s.slotId, s.player?.id ?? null]));
@@ -52,6 +53,11 @@ export default function MatchDayPage() {
   const [favoriteFormations, setFavoriteFormations] = useState<Set<FormationName>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
+  // Collapsed once there's already a lineup on the board — the pitch is
+  // what you came back for, not the roster you already confirmed last
+  // time. Reopens on demand (to tweak who's confirmed) or automatically
+  // once you start over.
+  const [playersSectionOpen, setPlayersSectionOpen] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [analysisSnapshot, setAnalysisSnapshot] = useState<string | null>(null);
@@ -117,6 +123,7 @@ export default function MatchDayPage() {
     setPositionNudges(draft.positionNudges);
     setAnalysis(draft.analysis);
     setAnalysisSnapshot(draft.analysisSnapshot);
+    setPlayersSectionOpen(!draft.activeFormation);
     setRestored(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -286,6 +293,7 @@ export default function MatchDayPage() {
       const response = await generateLineup(Array.from(confirmed), { locale });
       setResult(response);
       openFormation(response.best.formation, assignmentsFromSlots(response.best.slots));
+      setPlayersSectionOpen(false);
     } catch {
       setError(t("matchday.generateError"));
     } finally {
@@ -305,6 +313,7 @@ export default function MatchDayPage() {
       });
       setResult(response);
       openFormation(response.best.formation, assignmentsFromSlots(response.best.slots));
+      setPlayersSectionOpen(false);
     } catch {
       setError(t("matchday.forceError"));
     } finally {
@@ -313,6 +322,7 @@ export default function MatchDayPage() {
   }
 
   function handleReset() {
+    setPlayersSectionOpen(true);
     setConfirmed(new Set());
     setResult(null);
     setActiveFormationName(null);
@@ -329,59 +339,81 @@ export default function MatchDayPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">{t("matchday.heading")}</h1>
-      <p className="mt-2 text-sm text-black/60 dark:text-white/60">{t("matchday.subtitle")}</p>
+      <p className="mt-2 text-sm text-muted">{t("matchday.subtitle")}</p>
 
-      <section className="mt-6">
-        <h2 className="text-sm font-medium">{t("matchday.confirmedPlayers")}</h2>
-        {loading ? (
-          <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-            {t("matchday.loadingPlayers")}
-          </p>
-        ) : players.length === 0 ? (
-          <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-            {t("matchday.noPlayersYet")}
-          </p>
-        ) : (
-          <div className="mt-3 flex flex-col gap-5">
-            {[...POSITION_GROUP_ORDER, "none" as const].map((group) => {
-              const groupPlayers = playersByGroup.get(group);
-              if (!groupPlayers || groupPlayers.length === 0) return null;
-              return (
-                <div key={group}>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
-                    {group === "none"
-                      ? t("matchday.noPositionSet")
-                      : getPositionGroupLabel(group, locale)}
-                  </h3>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {groupPlayers.map((player) => (
-                      <label
-                        key={player.id}
-                        className="flex items-center gap-2 rounded border border-black/10 px-3 py-2 text-sm dark:border-white/10"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={confirmed.has(player.id)}
-                          onChange={() => toggle(player.id)}
-                        />
-                        <span className="flex items-center gap-1">
-                          {player.name}
-                          <InjuryBadge status={player.injuryStatus} />
-                          {player.membershipStatus === "guest" && (
-                            <span className="rounded-full border border-amber-500/50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                              {getMembershipStatusLabel("guest", locale)}
+      <section className="mt-6 rounded-2xl border border-border bg-surface">
+        <button
+          type="button"
+          onClick={() => setPlayersSectionOpen((open) => !open)}
+          className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+        >
+          <span className="flex items-center gap-2">
+            <span className="text-sm font-medium">{t("matchday.confirmedPlayers")}</span>
+            {!loading && players.length > 0 && (
+              <span className="text-xs text-muted">
+                {formatConfirmedCount(locale, confirmed.size, players.length)}
+              </span>
+            )}
+          </span>
+          <span className={`text-muted transition-transform ${playersSectionOpen ? "rotate-180" : ""}`}>
+            ▾
+          </span>
+        </button>
+
+        {playersSectionOpen && (
+          <div className="border-t border-border px-4 pb-4 pt-1">
+            {loading ? (
+              <p className="mt-2 text-sm text-muted">{t("matchday.loadingPlayers")}</p>
+            ) : players.length === 0 ? (
+              <p className="mt-2 text-sm text-muted">{t("matchday.noPlayersYet")}</p>
+            ) : (
+              <div className="mt-3 flex flex-col gap-5">
+                {[...POSITION_GROUP_ORDER, "none" as const].map((group) => {
+                  const groupPlayers = playersByGroup.get(group);
+                  if (!groupPlayers || groupPlayers.length === 0) return null;
+                  return (
+                    <div key={group}>
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+                        {group === "none"
+                          ? t("matchday.noPositionSet")
+                          : getPositionGroupLabel(group, locale)}
+                      </h3>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {groupPlayers.map((player) => (
+                          <label
+                            key={player.id}
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                              confirmed.has(player.id)
+                                ? "border-accent/40 bg-accent/10"
+                                : "border-border-strong hover:border-border"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={confirmed.has(player.id)}
+                              onChange={() => toggle(player.id)}
+                              className="accent-green-500"
+                            />
+                            <span className="flex items-center gap-1">
+                              {player.name}
+                              <InjuryBadge status={player.injuryStatus} />
+                              {player.membershipStatus === "guest" && (
+                                <span className="rounded-full border border-amber-500/40 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                                  {getMembershipStatusLabel("guest", locale)}
+                                </span>
+                              )}
                             </span>
-                          )}
-                        </span>
-                        <span className="text-black/50 dark:text-white/50">
-                          ({primaryPositionLabel(player, locale) || t("matchday.noPositionInline")})
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                            <span className="text-muted">
+                              ({primaryPositionLabel(player, locale) || t("matchday.noPositionInline")})
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -396,7 +428,7 @@ export default function MatchDayPage() {
               if (name) openFormation(name);
             }}
             disabled={confirmed.size === 0}
-            className="rounded border border-black/20 bg-transparent px-2 py-1 text-sm dark:border-white/20"
+            className="rounded-lg border border-border-strong bg-background px-3 py-2 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-50"
           >
             <option value="">{t("matchday.chooseFormation")}</option>
             {orderedFormationNames.map((name) => (
@@ -409,17 +441,17 @@ export default function MatchDayPage() {
             onClick={handleForceFormation}
             disabled={!activeFormationName || confirmed.size === 0 || generating}
             title={t("matchday.forceTitle")}
-            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+            className="rounded-lg border border-accent px-4 py-2 text-sm font-medium text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {generating ? t("matchday.generatingButton") : t("matchday.generateButton")}
           </button>
 
-          <span className="text-sm text-black/40 dark:text-white/40">{t("matchday.or")}</span>
+          <span className="text-sm text-muted">{t("matchday.or")}</span>
 
           <button
             onClick={handleGenerate}
             disabled={confirmed.size === 0 || generating}
-            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             {generating ? t("matchday.recommendingButton") : t("matchday.recommendButton")}
           </button>
@@ -428,14 +460,18 @@ export default function MatchDayPage() {
         {(confirmed.size > 0 || result) && (
           <button
             onClick={handleReset}
-            className="self-start text-sm text-black/50 hover:text-red-600 dark:text-white/50 dark:hover:text-red-400"
+            className="self-start text-sm text-muted transition hover:text-danger"
           >
             {t("matchday.reset")}
           </button>
         )}
       </section>
 
-      {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p className="mt-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
 
       {activeFormation && live && (
         <section className="mt-10 grid gap-8 sm:grid-cols-[1fr_1.2fr]">
@@ -446,10 +482,10 @@ export default function MatchDayPage() {
                   <button
                     key={option.formation}
                     onClick={() => openFormation(option.formation, assignmentsFromSlots(option.slots))}
-                    className={`rounded-full border px-3 py-1 text-xs ${
+                    className={`rounded-full border px-3 py-1 text-xs transition ${
                       activeFormationName === option.formation
-                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                        : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                        ? "border-accent bg-accent/15 text-accent"
+                        : "border-border-strong text-muted hover:border-border hover:text-foreground"
                     }`}
                   >
                     {option.formation}
@@ -471,12 +507,10 @@ export default function MatchDayPage() {
 
           <div>
             <h2 className="text-lg font-medium">{activeFormation.name}</h2>
-            <p className="text-sm text-black/60 dark:text-white/60">
-              {getFormationDescription(activeFormation.name, locale)}
-            </p>
+            <p className="text-sm text-muted">{getFormationDescription(activeFormation.name, locale)}</p>
 
             {live.warnings.length > 0 && (
-              <ul className="mt-3 space-y-1 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
+              <ul className="mt-3 space-y-1 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
                 {live.warnings.map((w, i) => (
                   <li key={i}>{w}</li>
                 ))}
@@ -486,20 +520,18 @@ export default function MatchDayPage() {
             <button
               onClick={handleAnalyze}
               disabled={analyzing}
-              className="mt-3 rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+              className="mt-3 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
             >
               {analyzing ? `✨ ${t("matchday.analyzingButton")}` : `✨ ${t("matchday.analyzeButton")}`}
             </button>
 
-            {analysisError && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{analysisError}</p>
-            )}
+            {analysisError && <p className="mt-2 text-sm text-danger">{analysisError}</p>}
 
             {analysis && (
-              <div className="mt-4 rounded border border-black/10 bg-black/5 p-3 text-sm dark:border-white/10 dark:bg-white/5">
+              <div className="mt-4 rounded-xl border border-border bg-surface p-4 text-sm">
                 <p>{analysis}</p>
                 {isAnalysisStale && (
-                  <p className="mt-2 text-xs italic text-black/50 dark:text-white/50">
+                  <p className="mt-2 text-xs italic text-muted">
                     {t("matchday.staleExplanationNote")}
                   </p>
                 )}

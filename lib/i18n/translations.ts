@@ -297,3 +297,9 @@ export function formatFavorite(locale: Locale, name: string, isFavorite: boolean
   }
   return isFavorite ? `Unfavorite ${name}` : `Favorite ${name}`;
 }
+
+export function formatConfirmedCount(locale: Locale, confirmedCount: number, totalCount: number): string {
+  return locale === "es"
+    ? `${confirmedCount} de ${totalCount} confirmados`
+    : `${confirmedCount} of ${totalCount} confirmed`;
+}
