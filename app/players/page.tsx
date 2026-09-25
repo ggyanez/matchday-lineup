@@ -23,7 +23,7 @@ function PositionBadgeList({ positions, locale }: { positions: Position[]; local
       {positions.map((position, i) => (
         <span key={position}>
           <PositionTooltip position={position}>
-            <span className="cursor-help underline decoration-dotted decoration-black/30 underline-offset-2 dark:decoration-white/30">
+            <span className="cursor-help underline decoration-dotted decoration-muted underline-offset-2">
               {getPositionCode(position, locale)}
             </span>
           </PositionTooltip>
@@ -156,7 +156,7 @@ export default function PlayersPage() {
         {!showForm && !editing && (
           <button
             onClick={() => setShowForm(true)}
-            className="rounded bg-black px-4 py-2 text-sm text-white dark:bg-white dark:text-black"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover"
           >
             {t("players.addPlayer")}
           </button>
@@ -180,7 +180,7 @@ export default function PlayersPage() {
       )}
 
       {!loading && players.length > 0 && (
-        <div className="mt-6 flex items-center gap-2 text-sm text-black/70 dark:text-white/70">
+        <div className="mt-6 flex items-center gap-2 text-sm text-muted">
           {t("players.sortBy")}
           {(["name", "position"] as const).map((mode) => (
             <button
@@ -190,8 +190,8 @@ export default function PlayersPage() {
               aria-pressed={sortMode === mode}
               className={`rounded-full border px-3 py-1 text-xs transition ${
                 sortMode === mode
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-border-strong text-muted hover:border-border hover:text-foreground"
               }`}
             >
               {mode === "name" ? t("players.sortByName") : t("players.sortByPosition")}
@@ -201,7 +201,7 @@ export default function PlayersPage() {
       )}
 
       {!loading && players.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-black/70 dark:text-white/70">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">
           {t("players.filterBy")}
           <button
             type="button"
@@ -209,8 +209,8 @@ export default function PlayersPage() {
             aria-pressed={!filtersActive}
             className={`rounded-full border px-3 py-1 text-xs transition ${
               !filtersActive
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                ? "border-accent bg-accent/15 text-accent"
+                : "border-border-strong text-muted hover:border-border hover:text-foreground"
             }`}
           >
             {t("players.filterAll")}
@@ -235,8 +235,8 @@ export default function PlayersPage() {
               aria-pressed={chip.active}
               className={`rounded-full border px-3 py-1 text-xs transition ${
                 chip.active
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-black/20 text-black/70 dark:border-white/20 dark:text-white/70"
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-border-strong text-muted hover:border-border hover:text-foreground"
               }`}
             >
               {chip.label}
@@ -247,32 +247,33 @@ export default function PlayersPage() {
 
       <div className="mt-8">
         {loading ? (
-          <p className="text-sm text-black/60 dark:text-white/60">{t("players.loading")}</p>
+          <p className="text-sm text-muted">{t("players.loading")}</p>
         ) : players.length === 0 ? (
-          <p className="text-sm text-black/60 dark:text-white/60">{t("players.empty")}</p>
+          <p className="text-sm text-muted">{t("players.empty")}</p>
         ) : sortedPlayers.length === 0 ? (
-          <p className="text-sm text-black/60 dark:text-white/60">{t("players.filteredEmpty")}</p>
+          <p className="text-sm text-muted">{t("players.filteredEmpty")}</p>
         ) : (
-          <ul className="divide-y divide-black/10 dark:divide-white/10">
+          <ul className="flex flex-col gap-2">
             {sortedPlayers.map((player) => (
-              <li key={player.id} className="flex items-center justify-between py-3">
+              <li
+                key={player.id}
+                className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3"
+              >
                 <div>
                   <p className="flex items-center gap-1.5 font-medium">
                     {player.name}
                     <InjuryBadge status={player.injuryStatus} />
                     {player.membershipStatus === "guest" && (
-                      <span className="rounded-full border border-amber-500/50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                      <span className="rounded-full border border-amber-500/40 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
                         {getMembershipStatusLabel("guest", locale)}
                       </span>
                     )}
                   </p>
-                  <p className="text-sm text-black/60 dark:text-white/60">
+                  <p className="text-sm text-muted">
                     {player.primaryPositions.length > 0 ? (
                       <PositionBadgeList positions={player.primaryPositions} locale={locale} />
                     ) : (
-                      <span className="italic text-amber-600 dark:text-amber-400">
-                        {t("players.noPositionSet")}
-                      </span>
+                      <span className="italic text-amber-400">{t("players.noPositionSet")}</span>
                     )}
                     {player.secondaryPositions.length > 0 && (
                       <>
@@ -289,13 +290,13 @@ export default function PlayersPage() {
                       setShowForm(false);
                       setEditing(player);
                     }}
-                    className="text-black/70 hover:text-black dark:text-white/70 dark:hover:text-white"
+                    className="text-muted transition hover:text-foreground"
                   >
                     {t("players.edit")}
                   </button>
                   <button
                     onClick={() => handleDelete(player)}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400"
+                    className="text-danger transition hover:text-red-400"
                   >
                     {t("players.remove")}
                   </button>

@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
 /*
+ * "cancha de noche" is a fixed theme, not an OS-preference mode — force
+ * Tailwind's `dark:` variant to key off a permanent class (set on <html>
+ * in the root layout) instead of `prefers-color-scheme`, so every
+ * existing `dark:`-styled component renders consistently for everyone,
+ * regardless of their device's own theme setting.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
  * A fixed dark palette ("cancha de noche") rather than a light/dark toggle
  * — a deliberate brand choice for this app, not an OS-preference mode.
  * The accent green matches the pitch itself (bg-emerald-800 in

@@ -50,7 +50,7 @@ export default function TeamPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">{t("team.heading")}</h1>
-      <p className="mt-2 text-sm text-black/60 dark:text-white/60">{t("team.subtitle")}</p>
+      <p className="mt-2 text-sm text-muted">{t("team.subtitle")}</p>
 
       <div className="mt-8">
         <div className="flex items-center justify-between">
@@ -58,7 +58,7 @@ export default function TeamPage() {
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="rounded bg-black px-3 py-1.5 text-xs text-white dark:bg-white dark:text-black"
+              className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground transition hover:bg-accent-hover"
             >
               {t("team.addMember")}
             </button>
@@ -66,11 +66,14 @@ export default function TeamPage() {
         </div>
 
         {loading ? (
-          <p className="mt-3 text-sm text-black/60 dark:text-white/60">{t("team.loading")}</p>
+          <p className="mt-3 text-sm text-muted">{t("team.loading")}</p>
         ) : (
-          <ul className="mt-3 divide-y divide-black/10 dark:divide-white/10">
+          <ul className="mt-3 flex flex-col gap-2">
             {members.map((member) => (
-              <li key={member.username} className="py-2 text-sm">
+              <li
+                key={member.username}
+                className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm"
+              >
                 {member.username}
               </li>
             ))}
@@ -80,34 +83,38 @@ export default function TeamPage() {
         {showForm && (
           <form
             onSubmit={handleAddMember}
-            className="mt-4 flex flex-col gap-3 rounded-lg border border-black/10 p-4 dark:border-white/10"
+            className="mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4"
           >
-            <label className="flex flex-col gap-1 text-sm">
-              {t("team.addMemberUsernameLabel")}
+            <label className="flex flex-col gap-1.5 text-sm">
+              <span className="font-medium">{t("team.addMemberUsernameLabel")}</span>
               <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="rounded border border-black/20 bg-transparent px-3 py-2 dark:border-white/20"
+                className="rounded-lg border border-border-strong bg-background px-3 py-2 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
                 autoCapitalize="none"
               />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("team.addMemberPasswordLabel")}
+            <label className="flex flex-col gap-1.5 text-sm">
+              <span className="font-medium">{t("team.addMemberPasswordLabel")}</span>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="rounded border border-black/20 bg-transparent px-3 py-2 dark:border-white/20"
+                className="rounded-lg border border-border-strong bg-background px-3 py-2 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
               />
             </label>
 
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && (
+              <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+                {error}
+              </p>
+            )}
 
             <div className="mt-1 flex gap-3">
               <button
                 type="submit"
                 disabled={submitting || !username.trim() || !password}
-                className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {submitting ? t("team.addMemberSubmitting") : t("team.addMemberSubmit")}
               </button>
@@ -117,7 +124,7 @@ export default function TeamPage() {
                   setShowForm(false);
                   setError(null);
                 }}
-                className="rounded border border-black/20 px-4 py-2 text-sm dark:border-white/20"
+                className="rounded-lg border border-border-strong px-4 py-2 text-sm transition hover:bg-surface-hover"
               >
                 {t("team.addMemberCancel")}
               </button>

@@ -67,17 +67,21 @@ export default function FormationsPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">{t("formations.heading")}</h1>
-      <p className="mt-2 text-sm text-black/60 dark:text-white/60">{t("formations.subtitle")}</p>
+      <p className="mt-2 text-sm text-muted">{t("formations.subtitle")}</p>
 
-      {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p className="mt-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
 
       {loading ? (
-        <p className="mt-6 text-sm text-black/60 dark:text-white/60">{t("formations.loading")}</p>
+        <p className="mt-6 text-sm text-muted">{t("formations.loading")}</p>
       ) : (
         <div className="mt-8 flex flex-col gap-8">
           {groups.map(([defenders, names]) => (
             <section key={defenders}>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
                 {formatAtTheBack(locale, defenders)}
               </h2>
               <ul className="grid gap-2 sm:grid-cols-2">
@@ -86,7 +90,7 @@ export default function FormationsPage() {
                   return (
                     <li
                       key={name}
-                      className="flex items-start gap-3 rounded border border-black/10 px-3 py-2 dark:border-white/10"
+                      className="flex items-start gap-3 rounded-xl border border-border bg-surface px-3 py-2.5"
                     >
                       <button
                         type="button"
@@ -94,19 +98,15 @@ export default function FormationsPage() {
                         disabled={saving === name}
                         aria-label={formatFavorite(locale, name, isFavorite)}
                         aria-pressed={isFavorite}
-                        className={`mt-0.5 text-lg leading-none disabled:opacity-40 ${
-                          isFavorite
-                            ? "text-amber-500"
-                            : "text-black/25 hover:text-black/50 dark:text-white/25 dark:hover:text-white/50"
+                        className={`mt-0.5 text-lg leading-none transition disabled:opacity-40 ${
+                          isFavorite ? "text-amber-400" : "text-muted/60 hover:text-muted"
                         }`}
                       >
                         {isFavorite ? "★" : "☆"}
                       </button>
                       <div>
                         <p className="font-medium">{name}</p>
-                        <p className="text-sm text-black/60 dark:text-white/60">
-                          {getFormationDescription(name, locale)}
-                        </p>
+                        <p className="text-sm text-muted">{getFormationDescription(name, locale)}</p>
                       </div>
                     </li>
                   );
